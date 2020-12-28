@@ -6,6 +6,7 @@
 
 <h1>Index</h1>
 
+
 <p>
     <a asp-action="Create">Create New</a>
 </p>
@@ -15,6 +16,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.Content)
             </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreationTime)
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -23,6 +27,9 @@
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Content)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreationTime)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |

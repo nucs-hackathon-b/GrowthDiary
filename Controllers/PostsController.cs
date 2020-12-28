@@ -7,16 +7,30 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using GrowthDiary.Data;
 using GrowthDiary.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using GrowthDiary.ViewModels;
+using System.Drawing;
+using GrowthDiary.Common;
+using System.IO;
 
 namespace GrowthDiary.Controllers
 {
     public class PostsController : Controller
     {
         private readonly GrowthDiaryContext _context;
+        private readonly ILogger<PostsController> _logger;
+        private readonly IWebHostEnvironment _environment;
+        private readonly IConfiguration _configuration;
 
-        public PostsController(GrowthDiaryContext context)
+        public PostsController(GrowthDiaryContext context, ILogger<PostsController> logger, IWebHostEnvironment environment,
+            IConfiguration configuration)
         {
             _context = context;
+            _logger = logger;
+            _environment = environment;
+            _configuration = configuration;
         }
 
         // GET: Posts
@@ -46,7 +60,7 @@ namespace GrowthDiary.Controllers
         // GET: Posts/Create
         public IActionResult Create()
         {
-            return View();
+            return View(new PostInputModel());
         }
 
         // POST: Posts/Create
@@ -54,15 +68,55 @@ namespace GrowthDiary.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Content")] Post post)
+        public async Task<IActionResult> Create([Bind] PostInputModel inputModel)
         {
+            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
             if (ModelState.IsValid)
             {
-                _context.Add(post);
+                var post = new Post()
+                {
+                    Content = inputModel.Content,
+                    InReplyToId = inputModel.InReplyToId,
+                    CreationTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
+                    LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo)
+                };
+                _context.Post.Add(post);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation($"{inputModel.Files}");
+                post = _context.Post.Where(p => p.Id == post.Id).Include(p => p.Images).Single();
+                // Upload image files
+                if (inputModel.Files != null)
+                {
+                    foreach (var file in inputModel.Files)
+                    {
+                        _logger.LogInformation($"FileName = {file.FileName}");
+                    }
+                    for (var i = 0; i < inputModel.Files.Count; ++i)
+                    {
+                        var file = inputModel.Files[i];
+                        Image image;
+                        using (var stream = file.OpenReadStream())
+                        {
+                            image = Image.FromStream(stream); // Read image
+                        }
+                        var extension = image.RawFormat.GetFileExtension();
+                        var fileName = extension.GenerateRandomFileName();
+                        var path = Path.Combine(_environment.WebRootPath, _configuration["PostImagesPath"], fileName);
+                        image.Save(path, image.RawFormat);
+                        var url = Path.Combine("/", _configuration["PostImagesPath"], fileName);
+                        post.Images.Add(new PostImage()
+                        {
+                            Url = url,
+                            Index = i
+                        });
+                    }
+                }
+
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(post);
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Posts/Edit/5

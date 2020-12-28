@@ -2,6 +2,7 @@ using GrowthDiary.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,9 +30,16 @@ namespace GrowthDiary
             services.AddDbContext<GrowthDiaryContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("GrowthDiaryContext")));
 
-            services.AddControllersWithViews();
+            services.AddLocalization(options => options.ResourcesPath = "Resources");
 
+            services.AddControllersWithViews().AddDataAnnotationsLocalization()
+                .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix);
+            services.AddRazorPages().AddDataAnnotationsLocalization()
+                .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix);
             
+            services.AddRouting(options => options.LowercaseUrls = true);
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -11,6 +11,8 @@
   <ItemGroup>
     <Compile Remove="Migrations\20201228080241_InitialCreate.cs" />
     <Compile Remove="Migrations\20201228080241_InitialCreate.Designer.cs" />
+    <Compile Remove="Migrations\20201228131048_InitialCreate.cs" />
+    <Compile Remove="Migrations\20201228131048_InitialCreate.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,10 +25,12 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.4" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="wwwroot\images\post\" />
   </ItemGroup>
 
 </Project>
