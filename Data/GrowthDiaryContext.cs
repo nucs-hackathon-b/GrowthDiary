@@ -7,9 +7,9 @@ using GrowthDiary.Models;
 
 namespace GrowthDiary.Data
 {
-    public class GrowthDairyContext:DbContext
+    public class GrowthDiaryContext:DbContext
     {
-        public GrowthDairyContext(DbContextOptions<GrowthDairyContext> options)
+        public GrowthDiaryContext(DbContextOptions<GrowthDiaryContext> options)
             : base(options)
         {
         }

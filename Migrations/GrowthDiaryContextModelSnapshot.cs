@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GrowthDiary.Migrations
 {
-    [DbContext(typeof(GrowthDairyContext))]
-    partial class GrowthDairyContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(GrowthDiaryContext))]
+    partial class GrowthDiaryContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {

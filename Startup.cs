@@ -26,8 +26,8 @@ namespace GrowthDiary
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddDbContext<GrowthDairyContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("GrowthDairyContext")));
+            services.AddDbContext<GrowthDiaryContext>(options =>
+                options.UseSqlite(Configuration.GetConnectionString("GrowthDiaryContext")));
 
             services.AddControllersWithViews();
 

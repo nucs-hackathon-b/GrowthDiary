@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GrowthDiary.Migrations
 {
-    [DbContext(typeof(GrowthDairyContext))]
-    [Migration("20201228080241_InitialCreate")]
+    [DbContext(typeof(GrowthDiaryContext))]
+    [Migration("20201228131048_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

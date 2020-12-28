@@ -12,9 +12,9 @@ namespace GrowthDiary.Controllers
 {
     public class PostsController : Controller
     {
-        private readonly GrowthDairyContext _context;
+        private readonly GrowthDiaryContext _context;
 
-        public PostsController(GrowthDairyContext context)
+        public PostsController(GrowthDiaryContext context)
         {
             _context = context;
         }
