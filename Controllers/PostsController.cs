@@ -34,9 +34,9 @@ namespace GrowthDiary.Controllers
         }
 
         // GET: Posts
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(String search, bool ascending)
         {
-            return View(await _context.Post.ToListAsync());
+            return View(await SearchPosts(search, ascending).ToListAsync());
         }
 
         // GET: Posts/Details/5
@@ -202,6 +202,19 @@ namespace GrowthDiary.Controllers
         private bool PostExists(int id)
         {
             return _context.Post.Any(e => e.Id == id);
+        }
+        
+        private IQueryable<Post> SearchPosts(String search, bool ascending)
+        {
+            var posts = _context.Post.AsQueryable();
+            if (!String.IsNullOrEmpty(search))
+                posts = posts.Where(e => e.Content.Contains(search));
+                
+            if (ascending)
+                posts = posts.OrderBy(e => e.CreationTime);
+            else
+                posts = posts.OrderByDescending(e => e.CreationTime);
+            return posts;
         }
     }
 }
