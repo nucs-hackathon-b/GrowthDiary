@@ -187,6 +187,26 @@ namespace GrowthDiary.Controllers
 
             return View(post);
         }
+        /*
+        public async Task<IActionResult> Like(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var post = await _context.Post
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            //increment like count
+            return View();
+        }
+        */
+
 
         // POST: Posts/Delete/5
         [HttpPost, ActionName("Delete")]
