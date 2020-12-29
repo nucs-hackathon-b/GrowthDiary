@@ -147,8 +147,9 @@ namespace GrowthDiary.Controllers
                 return NotFound();
             }
 
-            var post = await _context.Post.FindAsync(id);
-            if (post == null)
+            var query = from p in _context.Post.Include(p => p.Images) where p.Id == id select p;
+            var post = await query.SingleOrDefaultAsync();
+            if (post is null)
             {
                 return NotFound();
             }
