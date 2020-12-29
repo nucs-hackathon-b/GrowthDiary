@@ -42,19 +42,39 @@ namespace GrowthDiary.Controllers
         // GET: Posts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+
             if (id == null)
             {
                 return NotFound();
             }
 
-            var post = await _context.Post
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (post == null)
+            var query = from p in _context.Post
+                                    .Include(p => p.Replies)
+                                    .Include(p => p.InReplyTo)
+                                    .ThenInclude(p => p.Replies)
+                                    .Include(p => p.InReplyTo)
+                                    .Include(p => p.Images)
+                        where p.Id == id
+                        select p;
+            var post = query.FirstOrDefault();
+            if (post is null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Index));
             }
-
+            ViewData["InputModel"] = new PostInputModel()
+            {
+                InReplyToId = id
+            };
             return View(post);
+
+            //var post = await _context.Post
+            //    .FirstOrDefaultAsync(m => m.Id == id);
+            //if (post == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //return View(post);
         }
 
         // GET: Posts/Create
