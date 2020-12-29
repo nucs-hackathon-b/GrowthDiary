@@ -45,19 +45,39 @@ namespace GrowthDiary.Controllers
         // GET: Posts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+
             if (id == null)
             {
                 return NotFound();
             }
 
-            var post = await _context.Post
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (post == null)
+            var query = from p in _context.Post
+                                    .Include(p => p.Replies)
+                                    .Include(p => p.InReplyTo)
+                                    .ThenInclude(p => p.Replies)
+                                    .Include(p => p.InReplyTo)
+                                    .Include(p => p.Images)
+                        where p.Id == id
+                        select p;
+            var post = query.FirstOrDefault();
+            if (post is null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Index));
             }
-
+            ViewData["InputModel"] = new PostInputModel()
+            {
+                InReplyToId = id
+            };
             return View(post);
+
+            //var post = await _context.Post
+            //    .FirstOrDefaultAsync(m => m.Id == id);
+            //if (post == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //return View(post);
         }
 
         // GET: Posts/Create
@@ -130,8 +150,9 @@ namespace GrowthDiary.Controllers
                 return NotFound();
             }
 
-            var post = await _context.Post.FindAsync(id);
-            if (post == null)
+            var query = from p in _context.Post.Include(p => p.Images) where p.Id == id select p;
+            var post = await query.SingleOrDefaultAsync();
+            if (post is null)
             {
                 return NotFound();
             }
@@ -143,8 +164,11 @@ namespace GrowthDiary.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Content")] Post post)
+        public async Task<IActionResult> Edit(int id, [Bind] Post post)
         {
+            _logger.LogInformation(post.Id.ToString());
+            _logger.LogInformation(post.Content);
+
             if (id != post.Id)
             {
                 return NotFound();
@@ -154,8 +178,17 @@ namespace GrowthDiary.Controllers
             {
                 try
                 {
-                    _context.Update(post);
-                    await _context.SaveChangesAsync();
+                    var query = from pst in _context.Post where pst.Id == id select pst;
+                    var p = await query.SingleAsync();
+                    if (p != null)
+                    {
+                        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
+                        p.LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
+                        p.Content = post.Content;
+                        await _context.SaveChangesAsync();
+                        return RedirectToAction("Details", new { id });
+                    }
+                    return NotFound();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -196,9 +229,21 @@ namespace GrowthDiary.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var post = await _context.Post.FindAsync(id);
-            _context.Post.Remove(post);
-            await _context.SaveChangesAsync();
+            //var post = await _context.Post.FindAsync(id);
+            var query = from p in _context.Post.Include(p => p.Images)
+                        where p.Id == id
+                        select p;
+            var post = await query.SingleOrDefaultAsync();
+            if (post != null)
+            {
+                foreach (var image in post.Images)
+                {
+                    var path = Path.Combine(_environment.WebRootPath, image.Url.Substring(1));
+                    System.IO.File.Delete(path);
+                }
+                _context.Post.Remove(post);
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction(nameof(Index));
         }
 
