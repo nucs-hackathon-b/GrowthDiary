@@ -14,6 +14,7 @@ using GrowthDiary.ViewModels;
 using System.Drawing;
 using GrowthDiary.Common;
 using System.IO;
+using Microsoft.AspNetCore.Http;
 
 namespace GrowthDiary.Controllers
 {
@@ -23,38 +24,60 @@ namespace GrowthDiary.Controllers
         private readonly ILogger<PostsController> _logger;
         private readonly IWebHostEnvironment _environment;
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public PostsController(GrowthDiaryContext context, ILogger<PostsController> logger, IWebHostEnvironment environment,
-            IConfiguration configuration)
+            IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _logger = logger;
             _environment = environment;
             _configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         // GET: Posts
         public async Task<IActionResult> Index(String search, bool ascending)
         {
-            return View(await SearchPosts(search, ascending).ToListAsync());
+            return View(await SearchPosts(search).ToListAsync());
         }
 
         // GET: Posts/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+
             if (id == null)
             {
                 return NotFound();
             }
 
-            var post = await _context.Post
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (post == null)
+            var query = from p in _context.Post
+                                    .Include(p => p.Replies)
+                                    .Include(p => p.InReplyTo)
+                                    .ThenInclude(p => p.Replies)
+                                    .Include(p => p.InReplyTo)
+                                    .Include(p => p.Images)
+                        where p.Id == id
+                        select p;
+            var post = query.FirstOrDefault();
+            if (post is null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Index));
             }
-
+            ViewData["InputModel"] = new PostInputModel()
+            {
+                InReplyToId = id
+            };
             return View(post);
+
+            //var post = await _context.Post
+            //    .FirstOrDefaultAsync(m => m.Id == id);
+            //if (post == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //return View(post);
         }
 
         // GET: Posts/Create
@@ -127,8 +150,9 @@ namespace GrowthDiary.Controllers
                 return NotFound();
             }
 
-            var post = await _context.Post.FindAsync(id);
-            if (post == null)
+            var query = from p in _context.Post.Include(p => p.Images) where p.Id == id select p;
+            var post = await query.SingleOrDefaultAsync();
+            if (post is null)
             {
                 return NotFound();
             }
@@ -140,8 +164,11 @@ namespace GrowthDiary.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Content")] Post post)
+        public async Task<IActionResult> Edit(int id, [Bind] Post post)
         {
+            _logger.LogInformation(post.Id.ToString());
+            _logger.LogInformation(post.Content);
+
             if (id != post.Id)
             {
                 return NotFound();
@@ -151,8 +178,17 @@ namespace GrowthDiary.Controllers
             {
                 try
                 {
-                    _context.Update(post);
-                    await _context.SaveChangesAsync();
+                    var query = from pst in _context.Post where pst.Id == id select pst;
+                    var p = await query.SingleAsync();
+                    if (p != null)
+                    {
+                        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
+                        p.LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
+                        p.Content = post.Content;
+                        await _context.SaveChangesAsync();
+                        return RedirectToAction("Details", new { id });
+                    }
+                    return NotFound();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -213,9 +249,21 @@ namespace GrowthDiary.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var post = await _context.Post.FindAsync(id);
-            _context.Post.Remove(post);
-            await _context.SaveChangesAsync();
+            //var post = await _context.Post.FindAsync(id);
+            var query = from p in _context.Post.Include(p => p.Images)
+                        where p.Id == id
+                        select p;
+            var post = await query.SingleOrDefaultAsync();
+            if (post != null)
+            {
+                foreach (var image in post.Images)
+                {
+                    var path = Path.Combine(_environment.WebRootPath, image.Url.Substring(1));
+                    System.IO.File.Delete(path);
+                }
+                _context.Post.Remove(post);
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction(nameof(Index));
         }
 
@@ -224,17 +272,46 @@ namespace GrowthDiary.Controllers
             return _context.Post.Any(e => e.Id == id);
         }
         
-        private IQueryable<Post> SearchPosts(String search, bool ascending)
+        private IQueryable<Post> SearchPosts(String search)
         {
             var posts = _context.Post.AsQueryable();
             if (!String.IsNullOrEmpty(search))
                 posts = posts.Where(e => e.Content.Contains(search));
-                
+
+            var ascending = GetAscending();
+
             if (ascending)
                 posts = posts.OrderBy(e => e.CreationTime);
             else
                 posts = posts.OrderByDescending(e => e.CreationTime);
             return posts;
+        }
+
+        private Boolean GetAscending()
+        {
+            var currentAscending = _httpContextAccessor.HttpContext.Request.Cookies["ascending"];
+            var ascendBool = false;
+            if (!String.IsNullOrEmpty(currentAscending))
+                ascendBool = bool.Parse(currentAscending);
+            return ascendBool;
+        }
+
+        public IActionResult ToggleOrder()
+        {
+            var ascendBool = GetAscending();
+            WriteCookie("ascending", (!ascendBool).ToString(), true);
+            return RedirectToAction("Index");
+        }
+
+        private void WriteCookie(string key, string value, bool isPersistent)
+        {
+            CookieOptions options = new CookieOptions();
+            if (isPersistent)
+                options.Expires = DateTime.Now.AddDays(1);
+            else
+                options.Expires = DateTime.Now.AddSeconds(10);
+            _httpContextAccessor.HttpContext.Response.Cookies.Append
+            (key, value, options);
         }
     }
 }
