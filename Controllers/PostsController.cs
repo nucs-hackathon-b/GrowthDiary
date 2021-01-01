@@ -39,6 +39,7 @@ namespace GrowthDiary.Controllers
         // GET: Posts
         public async Task<IActionResult> Index(String search, bool ascending)
         {
+            ViewBag.search = search;
             return View(await SearchPosts(search).ToListAsync());
         }
 
@@ -287,20 +288,25 @@ namespace GrowthDiary.Controllers
             return posts;
         }
 
+        public IActionResult ToggleOrder(string search)
+        {
+            var ascendBool = GetAscending();
+            WriteCookie("ascending", (!ascendBool).ToString(), true);
+            return RedirectToAction("Index", new { search = search != "/" ? search : String.Empty });
+        }
+
         private Boolean GetAscending()
         {
-            var currentAscending = _httpContextAccessor.HttpContext.Request.Cookies["ascending"];
+            var currentAscending = ReadCookie("ascending");
             var ascendBool = false;
             if (!String.IsNullOrEmpty(currentAscending))
                 ascendBool = bool.Parse(currentAscending);
             return ascendBool;
         }
 
-        public IActionResult ToggleOrder()
+        private String ReadCookie(string key)
         {
-            var ascendBool = GetAscending();
-            WriteCookie("ascending", (!ascendBool).ToString(), true);
-            return RedirectToAction("Index");
+            return _httpContextAccessor.HttpContext.Request.Cookies[key];
         }
 
         private void WriteCookie(string key, string value, bool isPersistent)

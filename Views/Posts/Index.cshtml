@@ -18,6 +18,9 @@
 </form>
 <form asp-action="ToggleOrder">
     <p>
+        <input type="hidden" name="search" value=
+                @(ViewBag.search)
+               />
         <input type="submit" value="Toggle Order" />
     </p>
 </form>
