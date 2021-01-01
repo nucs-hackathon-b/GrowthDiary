@@ -33,6 +33,7 @@
             <th>
                 @Html.DisplayNameFor(model => model.CreationTime)
             </th>
+            <th>like</th>
             <th></th>
         </tr>
     </thead>
@@ -46,12 +47,13 @@
                 @Html.DisplayFor(modelItem => item.CreationTime)
             </td>
             <td>
+                @Html.DisplayFor(modelItem => item.Like)
+                <form asp-controller="Posts" asp-action="Like" asp-route-id="@item.Id"><input type="submit" value="like"></form>
+            </td>
+            <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a> |
-                <a asp-action="Like" asp-route-id="@item.Id">Like(development)</a>
-                
-
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
             </td>
         </tr>
 }

@@ -94,8 +94,8 @@ namespace GrowthDiary.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind] PostInputModel inputModel)
         {
-            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
-            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
+            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
             if (ModelState.IsValid)
             {
                 var post = new Post()
@@ -103,7 +103,8 @@ namespace GrowthDiary.Controllers
                     Content = inputModel.Content,
                     InReplyToId = inputModel.InReplyToId,
                     CreationTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
-                    LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo)
+                    LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
+                    Like = 0
                 };
                 _context.Post.Add(post);
                 await _context.SaveChangesAsync();
@@ -243,6 +244,34 @@ namespace GrowthDiary.Controllers
             return View();
         }
         */
+        // POST: Posts/Like/5
+        [HttpPost, ActionName("Like")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LikeIncrement(int id)
+        {
+            //var post = await _context.Post.FindAsync(id);
+            var query = from p in _context.Post.Include(p => p.Images)
+                        where p.Id == id
+                        select p;
+            var post = _context.Post.Where(p => p.Id == id).SingleOrDefault();
+            post.Like = post.Like += 1;
+
+
+                /*
+            var post = await query.SingleOrDefaultAsync();
+            if (post != null)
+            {
+                foreach (var image in post.Images)
+                {
+                    var path = Path.Combine(_environment.WebRootPath, image.Url.Substring(1));
+                    System.IO.File.Delete(path);
+                }
+                _context.Post.Remove(post);
+            }
+                */
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
 
 
         // POST: Posts/Delete/5
