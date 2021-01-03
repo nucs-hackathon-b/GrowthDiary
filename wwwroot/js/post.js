@@ -21,6 +21,15 @@ $(() => {
         input.click();
     });
 
+    $('#btn-add-tag').click(function (e) {
+        e.preventDefault();
+        let input = $('<input>');
+        input.attr('type', 'text').attr('name', 'Tags[]').val($('#input-tag').val());
+        //input.prop('disabled', true);
+        $('#input-tag').val('');
+        $('#div-tag').append(input);
+    })
+
     $('body').on('click', 'a.like-link', function () {
         console.log(this);
         var url = $(this).attr('href').toLowerCase();

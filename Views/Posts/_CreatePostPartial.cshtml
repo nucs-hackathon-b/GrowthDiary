@@ -8,6 +8,10 @@
         <textarea asp-for="Content" class="form-control"></textarea>
         <span asp-validation-for="Content" class="text-danger"></span>
     </div>
+    <div class="form-group" id="div-tag">
+        <input type="text" name="input-tag" id="input-tag" class="form-control" />
+        <button class="btn btn-info" id="btn-add-tag">Add Tag</button>
+    </div>
     <div class="form-row align-items-center">
         <div class="col-auto">
             <a class="btn btn-warning" id="btn-upload-image">@Localizer["Upload Image"]</a>

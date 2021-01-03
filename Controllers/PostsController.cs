@@ -58,6 +58,8 @@ namespace GrowthDiary.Controllers
                                     .ThenInclude(p => p.Replies)
                                     .Include(p => p.InReplyTo)
                                     .Include(p => p.Images)
+                                    .Include(p=>p.PostTags)
+                                    .ThenInclude(pt=>pt.Tag)
                         where p.Id == id
                         select p;
             var post = query.FirstOrDefault();
@@ -65,10 +67,7 @@ namespace GrowthDiary.Controllers
             {
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["InputModel"] = new PostInputModel()
-            {
-                InReplyToId = id
-            };
+            ViewData["InputModel"] = new PostInputModel();
             return View(post);
 
             //var post = await _context.Post
@@ -101,7 +100,6 @@ namespace GrowthDiary.Controllers
                 var post = new Post()
                 {
                     Content = inputModel.Content,
-                    InReplyToId = inputModel.InReplyToId,
                     CreationTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
                     LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
                     Like = 0
@@ -109,7 +107,36 @@ namespace GrowthDiary.Controllers
                 _context.Post.Add(post);
                 await _context.SaveChangesAsync();
                 _logger.LogInformation($"{inputModel.Files}");
-                post = _context.Post.Where(p => p.Id == post.Id).Include(p => p.Images).Single();
+                post = _context.Post.Where(p => p.Id == post.Id).Include(p => p.Images).Include(p=>p.PostTags).Single();
+                if (inputModel.Tags != null)
+                {
+                    foreach(string tagName in inputModel.Tags)
+                    {
+                        _logger.LogInformation(tagName);
+                        var tag = await _context.Tag.Where(t => t.Name == tagName).Include(t => t.PostTags).SingleOrDefaultAsync();
+                        if (tag is null)
+                        {
+                            tag = new Tag()
+                            {
+                                Name = tagName
+                            };
+                            _context.Tag.Add(tag);
+                            post.PostTags.Add(new PostTag()
+                            {
+                                Post = post,
+                                Tag = tag
+                            });
+                        }
+                        else
+                        {
+                            tag.PostTags.Add(new PostTag()
+                            {
+                                PostId = post.Id,
+                                Tag = tag
+                            });
+                        }
+                    }
+                }
                 // Upload image files
                 if (inputModel.Files != null)
                 {
@@ -230,7 +257,7 @@ namespace GrowthDiary.Controllers
                                 });
                             }
                         }
-                        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
+                        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo"); // For Linux
                         p.LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
                         p.Content = input.Content;
                         await _context.SaveChangesAsync();
@@ -338,8 +365,8 @@ namespace GrowthDiary.Controllers
             //コメントの表示時はforwhichpostで検索かけてヒットしたやつを並べる
             //コメントをDBに書き込む
 
-            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
-            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
+            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
             if (ModelState.IsValid)
             {
                 var post = new Comment()
