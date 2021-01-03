@@ -1,4 +1,4 @@
-﻿@model GrowthDiary.Models.Post
+﻿@model GrowthDiary.ViewModels.EditPostInputModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -19,16 +19,19 @@
                 <span asp-validation-for="Content" class="text-danger"></span>
             </div>
             <div>
-                @foreach (var image in Model.Images)
+                @foreach (var url in Model.ImageUrls)
                 {
                 <div>
-                    <img src="@image.Url" height="100" />
-                    <button class="btn btn-danger">Remove</button>
+                    <img src="@url" height="100" />
+                    <button class="btn btn-danger btn-remove-image" data-image-url="@url">Remove</button>
                 </div>
                 }
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+            <div id="hidden-fields">
+
             </div>
         </form>
     </div>
@@ -40,4 +43,5 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+<script src="~/js/edit-post.js"></script>
 }

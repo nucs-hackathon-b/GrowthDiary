@@ -157,7 +157,18 @@ namespace GrowthDiary.Controllers
             {
                 return NotFound();
             }
-            return View(post);
+            var input = new EditPostInputModel()
+            {
+                Id = post.Id,
+                Content = post.Content,
+                ImagesToRemove = new List<string>(),
+                ImageUrls = new List<string>()
+            };
+            foreach(var image in post.Images)
+            {
+                input.ImageUrls.Add(image.Url);
+            }
+            return View(input);
         }
 
         // POST: Posts/Edit/5
@@ -165,12 +176,11 @@ namespace GrowthDiary.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind] Post post)
+        public async Task<IActionResult> Edit(int id, [Bind] EditPostInputModel input)
         {
-            _logger.LogInformation(post.Id.ToString());
-            _logger.LogInformation(post.Content);
+            _logger.LogInformation(input.ImagesToRemove.ToString());
 
-            if (id != post.Id)
+            if (id != input.Id)
             {
                 return NotFound();
             }
@@ -183,9 +193,16 @@ namespace GrowthDiary.Controllers
                     var p = await query.SingleAsync();
                     if (p != null)
                     {
+                        foreach (var url in input.ImagesToRemove)
+                        {
+                            var path = Path.Combine(_environment.WebRootPath, url.Substring(1));
+                            System.IO.File.Delete(path);
+                            var image = _context.PostImage.AsQueryable().Where(i => i.Url == url).FirstOrDefault();
+                            _context.Remove(image);
+                        }
                         var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
                         p.LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
-                        p.Content = post.Content;
+                        p.Content = input.Content;
                         await _context.SaveChangesAsync();
                         return RedirectToAction("Details", new { id });
                     }
@@ -193,7 +210,7 @@ namespace GrowthDiary.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!PostExists(post.Id))
+                    if (!PostExists(input.Id))
                     {
                         return NotFound();
                     }
@@ -204,7 +221,7 @@ namespace GrowthDiary.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(post);
+            return RedirectToAction("Edit", new { id });
         }
 
         // GET: Posts/Delete/5

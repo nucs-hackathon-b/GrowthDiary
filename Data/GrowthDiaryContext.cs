@@ -14,5 +14,7 @@ namespace GrowthDiary.Data
         {
         }
         public DbSet<GrowthDiary.Models.Post> Post { get; set; }
+        public DbSet<GrowthDiary.Models.PostImage> PostImage { get; set; }
+
     }
 }
