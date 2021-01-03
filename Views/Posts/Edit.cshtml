@@ -10,7 +10,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Edit" id="form-edit-post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
@@ -28,10 +28,12 @@
                 }
             </div>
             <div class="form-group">
+                <button id="btn-upload-image" class="btn btn-warning">Upload Image</button>
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
+            <div id="div-images"></div>
             <div id="hidden-fields">
-
+                <input type="file" multiple accept="images/*" hidden id="files" name="files" />
             </div>
         </form>
     </div>
