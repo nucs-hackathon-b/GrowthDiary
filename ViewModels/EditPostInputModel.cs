@@ -18,12 +18,11 @@ namespace GrowthDiary.ViewModels
         [Required(ErrorMessage = "The {0} field is required.")]
         public string Content { get; set; }
 
-
-
         public  IList<string> ImageUrls { get; set; }
 
         public IList<IFormFile> Files { get; set; }
 
         public IList<string> ImagesToRemove { get; set; }
+        public IList<string> Tags { get; set; }
     }
 }

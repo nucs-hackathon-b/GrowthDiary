@@ -17,6 +17,7 @@ namespace GrowthDiary.Data
         public DbSet<GrowthDiary.Models.PostImage> PostImage { get; set; }
         public DbSet<GrowthDiary.Models.Comment> Comment { get; set; }
         public DbSet<GrowthDiary.Models.Tag> Tag { get; set; }
+        public DbSet<GrowthDiary.Models.PostTag> PostTag { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)

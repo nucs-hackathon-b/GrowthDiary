@@ -179,7 +179,9 @@ namespace GrowthDiary.Controllers
                 return NotFound();
             }
 
-            var query = from p in _context.Post.Include(p => p.Images) where p.Id == id select p;
+            var query = from p in _context.Post.Include(p => p.Images).
+                        Include(p=>p.PostTags).ThenInclude(pt=>pt.Tag) 
+                        where p.Id == id select p;
             var post = await query.SingleOrDefaultAsync();
             if (post is null)
             {
@@ -191,8 +193,13 @@ namespace GrowthDiary.Controllers
                 Content = post.Content,
                 ImagesToRemove = new List<string>(),
                 ImageUrls = new List<string>(),
-                Files = new List<IFormFile>()
+                Files = new List<IFormFile>(),
+                Tags = new List<string>()
             };
+            foreach(var tag in post.PostTags)
+            {
+                input.Tags.Add(tag.Tag.Name);
+            }
             foreach(var image in post.Images)
             {
                 input.ImageUrls.Add(image.Url);
@@ -217,10 +224,60 @@ namespace GrowthDiary.Controllers
             {
                 try
                 {
-                    var query = from pst in _context.Post.Include(p=>p.Images) where pst.Id == id select pst;
+                    var query = from pst in _context.Post.Include(p=>p.Images)
+                                .Include(p=>p.PostTags).ThenInclude(pt=>pt.Tag)
+                                where pst.Id == id select pst;
                     var p = await query.SingleAsync();
                     if (p != null)
                     {
+                        if (input.Tags != null)
+                        {
+                            LinkedList<string> tagList = new LinkedList<string>();
+                            foreach(var pt in p.PostTags)
+                            {
+                                tagList.AddLast(pt.Tag.Name);
+                            }
+                            foreach(var tagName in input.Tags)
+                            {
+                                var tag = await _context.Tag.Where(t => t.Name == tagName).SingleOrDefaultAsync();
+                                if(tag is null)
+                                {
+                                    tag = new Tag()
+                                    {
+                                        Name = tagName
+                                    };
+                                    _context.Tag.Add(tag);
+                                    p.PostTags.Add(new PostTag()
+                                    {
+                                        Post = p,
+                                        Tag = tag
+                                    });
+                                }
+                                else
+                                {
+                                    var postTag =await _context.PostTag.Include(pt => pt.Tag).Include(pt => pt.Post)
+                                        .Where(pt => pt.TagId == tag.Id && pt.PostId == p.Id).SingleOrDefaultAsync();
+                                    if(postTag is null)
+                                    {
+                                        p.PostTags.Add(new PostTag()
+                                        {
+                                            Post = p,
+                                            Tag = tag
+                                        });
+                                    }
+                                    else
+                                    {
+                                        tagList.Remove(tag.Name);
+                                    }
+                                }
+                            }
+                            foreach(var t in tagList)
+                            {
+                                var postTag = await _context.PostTag.Include(pt => pt.Tag).Include(pt => pt.Post)
+                                        .Where(pt => pt.Tag.Name == t && pt.PostId == p.Id).SingleOrDefaultAsync();
+                                _context.PostTag.Remove(postTag);
+                            }
+                        }
                         if (input.ImagesToRemove != null)
                         {
                             foreach (var url in input.ImagesToRemove)

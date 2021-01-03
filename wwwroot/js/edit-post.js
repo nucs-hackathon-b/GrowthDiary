@@ -9,7 +9,14 @@
         input.val($(this).attr('data-image-url'));
         $('img[src="' + $(this).attr('data-image-url') + '"]').remove();
         $(this).remove();
+        return false;
     })
+
+    $('.btn-remove-tag').click(function (e) {
+        e.preventDefault();
+        $(this).parent().remove();
+        return false;
+    });
 
     $('#btn-upload-image').click(function (e) {
         e.preventDefault();
@@ -19,6 +26,20 @@
         input.on('change', handleUploadImage);
         input.click();
     });
+
+    $('#btn-add-tag').click(function (e) {
+        e.preventDefault();
+        let input = $('<input>');
+        input.attr('type', 'text').attr('name', 'Tags[]').val($('#input-tag').val());
+        //input.prop('disabled', true);
+        $('#input-tag').val('');
+        let li = $('<li></li>');
+        li.append(input);
+        let button = $('<button></button>');
+        button.addClass('btn').addClass('btn-danger').addClass('btn-remove-tag').attr('data-tag', input.val());
+        li.append(input);
+        $('#tag-list').append(li);
+    })
 
     $('#form-edit-post').on('submit', function () {
         let dt = new DataTransfer();
