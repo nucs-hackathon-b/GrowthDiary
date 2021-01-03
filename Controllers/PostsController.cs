@@ -163,7 +163,8 @@ namespace GrowthDiary.Controllers
                 Id = post.Id,
                 Content = post.Content,
                 ImagesToRemove = new List<string>(),
-                ImageUrls = new List<string>()
+                ImageUrls = new List<string>(),
+                Files = new List<IFormFile>()
             };
             foreach(var image in post.Images)
             {
@@ -179,7 +180,6 @@ namespace GrowthDiary.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind] EditPostInputModel input)
         {
-            _logger.LogInformation(input.ImagesToRemove.ToString());
 
             if (id != input.Id)
             {
@@ -190,16 +190,45 @@ namespace GrowthDiary.Controllers
             {
                 try
                 {
-                    var query = from pst in _context.Post where pst.Id == id select pst;
+                    var query = from pst in _context.Post.Include(p=>p.Images) where pst.Id == id select pst;
                     var p = await query.SingleAsync();
                     if (p != null)
                     {
-                        foreach (var url in input.ImagesToRemove)
+                        if (input.ImagesToRemove != null)
                         {
-                            var path = Path.Combine(_environment.WebRootPath, url.Substring(1));
-                            System.IO.File.Delete(path);
-                            var image = _context.PostImage.AsQueryable().Where(i => i.Url == url).FirstOrDefault();
-                            _context.Remove(image);
+                            foreach (var url in input.ImagesToRemove)
+                            {
+                                var path = Path.Combine(_environment.WebRootPath, url.Substring(1));
+                                System.IO.File.Delete(path);
+                                var image = _context.PostImage.AsQueryable().Where(i => i.Url == url).FirstOrDefault();
+                                _context.Remove(image);
+                            }
+                        }
+                        if (input.Files != null)
+                        {
+                            foreach (var file in input.Files)
+                            {
+                                _logger.LogInformation($"FileName = {file.FileName}");
+                            }
+                            for (var i = 0; i < input.Files.Count; ++i)
+                            {
+                                var file = input.Files[i];
+                                Image image;
+                                using (var stream = file.OpenReadStream())
+                                {
+                                    image = Image.FromStream(stream); // Read image
+                                }
+                                var extension = image.RawFormat.GetFileExtension();
+                                var fileName = extension.GenerateRandomFileName();
+                                var path = Path.Combine(_environment.WebRootPath, _configuration["PostImagesPath"], fileName);
+                                image.Save(path, image.RawFormat);
+                                var url = Path.Combine("/", _configuration["PostImagesPath"], fileName);
+                                p.Images.Add(new PostImage()
+                                {
+                                    Url = url,
+                                    Index = i
+                                });
+                            }
                         }
                         var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
                         p.LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
