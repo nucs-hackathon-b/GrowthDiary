@@ -10,10 +10,18 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<form asp-action="Index">
+<form asp-action="Index" method="get">
     <p>
         Search: <input type="text" name="search" />
         <input type="submit" value="Filter" />
+    </p>
+</form>
+<form asp-action="ToggleOrder">
+    <p>
+        <input type="hidden" name="search" value=
+                @(ViewBag.search)
+               />
+        <input type="submit" value="Toggle Order" />
     </p>
 </form>
 <table class="table">

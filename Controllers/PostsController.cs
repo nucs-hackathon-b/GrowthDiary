@@ -14,6 +14,7 @@ using GrowthDiary.ViewModels;
 using System.Drawing;
 using GrowthDiary.Common;
 using System.IO;
+using Microsoft.AspNetCore.Http;
 
 namespace GrowthDiary.Controllers
 {
@@ -23,20 +24,23 @@ namespace GrowthDiary.Controllers
         private readonly ILogger<PostsController> _logger;
         private readonly IWebHostEnvironment _environment;
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public PostsController(GrowthDiaryContext context, ILogger<PostsController> logger, IWebHostEnvironment environment,
-            IConfiguration configuration)
+            IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _logger = logger;
             _environment = environment;
             _configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         // GET: Posts
         public async Task<IActionResult> Index(String search, bool ascending)
         {
-            return View(await SearchPosts(search, ascending).ToListAsync());
+            ViewBag.search = search;
+            return View(await SearchPosts(search).ToListAsync());
         }
 
         // GET: Posts/Details/5
@@ -248,18 +252,52 @@ namespace GrowthDiary.Controllers
         {
             return _context.Post.Any(e => e.Id == id);
         }
-
-        private IQueryable<Post> SearchPosts(String search, bool ascending)
+        
+        private IQueryable<Post> SearchPosts(String search)
         {
             var posts = _context.Post.AsQueryable();
             if (!String.IsNullOrEmpty(search))
                 posts = posts.Where(e => e.Content.Contains(search));
+
+            var ascending = GetAscending();
 
             if (ascending)
                 posts = posts.OrderBy(e => e.CreationTime);
             else
                 posts = posts.OrderByDescending(e => e.CreationTime);
             return posts;
+        }
+
+        public IActionResult ToggleOrder(string search)
+        {
+            var ascendBool = GetAscending();
+            WriteCookie("ascending", (!ascendBool).ToString(), true);
+            return RedirectToAction("Index", new { search = search != "/" ? search : String.Empty });
+        }
+
+        private Boolean GetAscending()
+        {
+            var currentAscending = ReadCookie("ascending");
+            var ascendBool = false;
+            if (!String.IsNullOrEmpty(currentAscending))
+                ascendBool = bool.Parse(currentAscending);
+            return ascendBool;
+        }
+
+        private String ReadCookie(string key)
+        {
+            return _httpContextAccessor.HttpContext.Request.Cookies[key];
+        }
+
+        private void WriteCookie(string key, string value, bool isPersistent)
+        {
+            CookieOptions options = new CookieOptions();
+            if (isPersistent)
+                options.Expires = DateTime.Now.AddDays(1);
+            else
+                options.Expires = DateTime.Now.AddSeconds(10);
+            _httpContextAccessor.HttpContext.Response.Cookies.Append
+            (key, value, options);
         }
     }
 }

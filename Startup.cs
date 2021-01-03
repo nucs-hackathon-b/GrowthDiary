@@ -39,6 +39,7 @@ namespace GrowthDiary
             
             services.AddRouting(options => options.LowercaseUrls = true);
 
+            services.AddHttpContextAccessor();
 
         }
 
