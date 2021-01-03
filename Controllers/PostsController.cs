@@ -37,7 +37,7 @@ namespace GrowthDiary.Controllers
         }
 
         // GET: Posts
-        public async Task<IActionResult> Index(String search, bool ascending)
+        public async Task<IActionResult> Index(String search)
         {
             ViewBag.search = search;
             return View(await SearchPosts(search).ToListAsync());
@@ -94,8 +94,8 @@ namespace GrowthDiary.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind] PostInputModel inputModel)
         {
-            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
-            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
+            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
             if (ModelState.IsValid)
             {
                 var post = new Post()
@@ -158,7 +158,19 @@ namespace GrowthDiary.Controllers
             {
                 return NotFound();
             }
-            return View(post);
+            var input = new EditPostInputModel()
+            {
+                Id = post.Id,
+                Content = post.Content,
+                ImagesToRemove = new List<string>(),
+                ImageUrls = new List<string>(),
+                Files = new List<IFormFile>()
+            };
+            foreach(var image in post.Images)
+            {
+                input.ImageUrls.Add(image.Url);
+            }
+            return View(input);
         }
 
         // POST: Posts/Edit/5
@@ -166,12 +178,10 @@ namespace GrowthDiary.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind] Post post)
+        public async Task<IActionResult> Edit(int id, [Bind] EditPostInputModel input)
         {
-            _logger.LogInformation(post.Id.ToString());
-            _logger.LogInformation(post.Content);
 
-            if (id != post.Id)
+            if (id != input.Id)
             {
                 return NotFound();
             }
@@ -180,13 +190,49 @@ namespace GrowthDiary.Controllers
             {
                 try
                 {
-                    var query = from pst in _context.Post where pst.Id == id select pst;
+                    var query = from pst in _context.Post.Include(p=>p.Images) where pst.Id == id select pst;
                     var p = await query.SingleAsync();
                     if (p != null)
                     {
+                        if (input.ImagesToRemove != null)
+                        {
+                            foreach (var url in input.ImagesToRemove)
+                            {
+                                var path = Path.Combine(_environment.WebRootPath, url.Substring(1));
+                                System.IO.File.Delete(path);
+                                var image = _context.PostImage.AsQueryable().Where(i => i.Url == url).FirstOrDefault();
+                                _context.Remove(image);
+                            }
+                        }
+                        if (input.Files != null)
+                        {
+                            foreach (var file in input.Files)
+                            {
+                                _logger.LogInformation($"FileName = {file.FileName}");
+                            }
+                            for (var i = 0; i < input.Files.Count; ++i)
+                            {
+                                var file = input.Files[i];
+                                Image image;
+                                using (var stream = file.OpenReadStream())
+                                {
+                                    image = Image.FromStream(stream); // Read image
+                                }
+                                var extension = image.RawFormat.GetFileExtension();
+                                var fileName = extension.GenerateRandomFileName();
+                                var path = Path.Combine(_environment.WebRootPath, _configuration["PostImagesPath"], fileName);
+                                image.Save(path, image.RawFormat);
+                                var url = Path.Combine("/", _configuration["PostImagesPath"], fileName);
+                                p.Images.Add(new PostImage()
+                                {
+                                    Url = url,
+                                    Index = i
+                                });
+                            }
+                        }
                         var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
                         p.LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
-                        p.Content = post.Content;
+                        p.Content = input.Content;
                         await _context.SaveChangesAsync();
                         return RedirectToAction("Details", new { id });
                     }
@@ -194,7 +240,7 @@ namespace GrowthDiary.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!PostExists(post.Id))
+                    if (!PostExists(input.Id))
                     {
                         return NotFound();
                     }
@@ -205,7 +251,7 @@ namespace GrowthDiary.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(post);
+            return RedirectToAction("Edit", new { id });
         }
 
         // GET: Posts/Delete/5
@@ -247,7 +293,7 @@ namespace GrowthDiary.Controllers
         // POST: Posts/Like/5
         [HttpPost, ActionName("Like")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LikeIncrement(int id)
+        public async Task<IActionResult> LikeIncrement(string search, int id)
         {
             //var post = await _context.Post.FindAsync(id);
             var query = from p in _context.Post.Include(p => p.Images)
@@ -270,7 +316,8 @@ namespace GrowthDiary.Controllers
             }
                 */
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            //return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
         }
 
         // POST: Posts/Comment/5
@@ -345,7 +392,7 @@ namespace GrowthDiary.Controllers
             if (!String.IsNullOrEmpty(search))
                 posts = posts.Where(e => e.Content.Contains(search));
 
-            var ascending = GetAscending();
+            var ascending = CookieToBool("ascending");
 
             if (ascending)
                 posts = posts.OrderBy(e => e.CreationTime);
@@ -356,18 +403,18 @@ namespace GrowthDiary.Controllers
 
         public IActionResult ToggleOrder(string search)
         {
-            var ascendBool = GetAscending();
+            var ascendBool = CookieToBool("ascending");
             WriteCookie("ascending", (!ascendBool).ToString(), true);
-            return RedirectToAction("Index", new { search = search != "/" ? search : String.Empty });
+            return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
         }
 
-        private Boolean GetAscending()
+        private Boolean CookieToBool(string key)
         {
-            var currentAscending = ReadCookie("ascending");
-            var ascendBool = false;
-            if (!String.IsNullOrEmpty(currentAscending))
-                ascendBool = bool.Parse(currentAscending);
-            return ascendBool;
+            var cookie = ReadCookie(key);
+            var store = false;
+            if (!String.IsNullOrEmpty(cookie))
+                store = bool.Parse(cookie);
+            return store;
         }
 
         private String ReadCookie(string key)
