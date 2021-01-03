@@ -37,7 +37,7 @@ namespace GrowthDiary.Controllers
         }
 
         // GET: Posts
-        public async Task<IActionResult> Index(String search, bool ascending)
+        public async Task<IActionResult> Index(String search)
         {
             ViewBag.search = search;
             return View(await SearchPosts(search).ToListAsync());
@@ -247,7 +247,7 @@ namespace GrowthDiary.Controllers
         // POST: Posts/Like/5
         [HttpPost, ActionName("Like")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LikeIncrement(int id)
+        public async Task<IActionResult> LikeIncrement(string search, int id)
         {
             //var post = await _context.Post.FindAsync(id);
             var query = from p in _context.Post.Include(p => p.Images)
@@ -270,7 +270,8 @@ namespace GrowthDiary.Controllers
             }
                 */
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            //return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
         }
 
 
@@ -308,7 +309,7 @@ namespace GrowthDiary.Controllers
             if (!String.IsNullOrEmpty(search))
                 posts = posts.Where(e => e.Content.Contains(search));
 
-            var ascending = GetAscending();
+            var ascending = CookieToBool("ascending");
 
             if (ascending)
                 posts = posts.OrderBy(e => e.CreationTime);
@@ -319,18 +320,18 @@ namespace GrowthDiary.Controllers
 
         public IActionResult ToggleOrder(string search)
         {
-            var ascendBool = GetAscending();
+            var ascendBool = CookieToBool("ascending");
             WriteCookie("ascending", (!ascendBool).ToString(), true);
-            return RedirectToAction("Index", new { search = search != "/" ? search : String.Empty });
+            return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
         }
 
-        private Boolean GetAscending()
+        private Boolean CookieToBool(string key)
         {
-            var currentAscending = ReadCookie("ascending");
-            var ascendBool = false;
-            if (!String.IsNullOrEmpty(currentAscending))
-                ascendBool = bool.Parse(currentAscending);
-            return ascendBool;
+            var cookie = ReadCookie(key);
+            var store = false;
+            if (!String.IsNullOrEmpty(cookie))
+                store = bool.Parse(cookie);
+            return store;
         }
 
         private String ReadCookie(string key)
