@@ -29,6 +29,8 @@ namespace GrowthDiary.Models
         [Required]
         public string Content { get; set; }
 
+        public int Like { get; set;  }
+
 
         public virtual ICollection<PostImage> Images { get; set; }
     }
