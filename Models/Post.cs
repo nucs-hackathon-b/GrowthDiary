@@ -31,6 +31,8 @@ namespace GrowthDiary.Models
 
         public int Like { get; set;  }
 
+        public int Comments { get; set; }
+
 
         public virtual ICollection<PostImage> Images { get; set; }
     }

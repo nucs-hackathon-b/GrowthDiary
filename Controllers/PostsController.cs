@@ -273,6 +273,43 @@ namespace GrowthDiary.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // POST: Posts/Comment/5
+        [HttpPost, ActionName("Comment")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CommentReceived(int id, [Bind] PostInputModel inputModel)
+        {
+            //var post = await _context.Post.FindAsync(id);
+            var query = from p in _context.Post.Include(p => p.Images)
+                        where p.Id == id
+                        select p;
+            var post_db = _context.Post.Where(p => p.Id == id).SingleOrDefault();
+            post_db.Comments = post_db.Comments += 1;
+            await _context.SaveChangesAsync();
+
+            //明日ここから再開
+            //新しくコメント専用のモデルを作って、comment: {content, datetime, forwhichpost(id)}
+            //コメントの表示時はforwhichpostで検索かけてヒットしたやつを並べる
+            //コメントをDBに書き込む
+
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
+            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
+            if (ModelState.IsValid)
+            {
+                var post = new Comment()
+                {
+                    Contents = inputModel.Content,
+                    CreationTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
+                    ForWhichId = id
+                };
+                _context.Comment.Add(post);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+
+
 
         // POST: Posts/Delete/5
         [HttpPost, ActionName("Delete")]

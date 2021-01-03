@@ -8,8 +8,8 @@
 }
 <div>
     <div style="position: relative;">
-        
-        @if ( Model.InReplyTo != null)
+
+        @if (Model.InReplyTo != null)
         {
             <div class="m-3 p-2 border border-secondary rounded bg-light">
                 <p>
@@ -34,10 +34,57 @@
             </small>
         </div>
         <div>
-            @Localizer["{0} replies", Model.Replies.Count]
+            @Localizer["{0} Comments", Model.Comments]
         </div>
 
-       
+        <div>
+            @*ここにコメントを表示したい*@
+        </div>
+
+        <form asp-controller="Posts" asp-action="Comment" id="form-create-post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <textarea class="form-control" placeholder="enter comment..."></textarea>
+                <span asp-validation-for="Content" class="text-danger"></span>
+            </div>
+            <div class="form-row align-items-center">
+                <div class="col-auto">
+                    @*<a class="btn btn-warning" id="btn-upload-image">@Localizer["Upload Image"]</a>*@
+                    <input type="submit" value="Add Comment" class="btn btn-primary" />
+                </div>
+            </div>
+            @Html.HiddenFor(m => m.InReplyToId)
+        </form>
+
+
+        @*
+
+        <form asp-controller="Posts" asp-action="Create" id="form-create-post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group">
+                <textarea asp-for="Content" class="form-control"></textarea>
+                <span asp-validation-for="Content" class="text-danger"></span>
+            </div>
+            <div class="form-row align-items-center">
+                <div class="col-auto">
+                    <a class="btn btn-warning" id="btn-upload-image">@Localizer["Upload Image"]</a>
+                    <input type="file" multiple accept="images/*" hidden id="files" name="files" />
+                </div>
+                <div class="col-auto">
+                    <input type="submit" value="Create" class="btn btn-primary" />
+                </div>
+            </div>
+            <div id="div-images" class="d-flex flex-wrap justify-content-start">
+
+            </div>
+            @Html.HiddenFor(m => m.InReplyToId)
+        </form>
+        *@
+
+
 
     </div>
                 <form class="form-inline" asp-action="Delete" asp-controller="Posts" method="post" asp-route-id="@Model.Id">
