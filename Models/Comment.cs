@@ -10,12 +10,10 @@ namespace GrowthDiary.Models
     {
         [Key]
         [Required]
-        public int Id { get; set; }
-
+        public DateTime CreationTime { get; set; }
         [Required]
         public int ForWhichId { get; set; }
 
-        public DateTime CreationTime { get; set; }
 
         [Required]
         public string Contents { get; set; }

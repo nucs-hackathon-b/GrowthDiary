@@ -58,6 +58,7 @@ namespace GrowthDiary.Controllers
                                     .ThenInclude(p => p.Replies)
                                     .Include(p => p.InReplyTo)
                                     .Include(p => p.Images)
+                                    
                         where p.Id == id
                         select p;
             var post = query.FirstOrDefault();
@@ -69,6 +70,27 @@ namespace GrowthDiary.Controllers
             {
                 InReplyToId = id
             };
+            /*
+            var ReturnModel = new ViewModelWrapper
+            {
+                Post = new Post
+                {
+                    Id = post.Id,
+                    CreationTime = post.CreationTime,
+                    LastModifiedTime = post.LastModifiedTime,
+                    InReplyToId = post.InReplyToId,
+                    InReplyTo = post.InReplyTo,
+                    Replies = post.Replies,
+                    Content = post.Content,
+                    Like = post.Like,
+                    Comments = post.Comments,
+                    Images = post.Images
+                },
+                Comment = new List<Comment>
+
+                { new Comment {Id = 1, Contents = "aaa", CreationTime = post.CreationTime, ForWhichId = post.Id}}
+            };
+            */
             return View(post);
 
             //var post = await _context.Post
@@ -94,8 +116,8 @@ namespace GrowthDiary.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind] PostInputModel inputModel)
         {
-            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
-            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
+            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
             if (ModelState.IsValid)
             {
                 var post = new Post()
@@ -329,7 +351,7 @@ namespace GrowthDiary.Controllers
             var query = from p in _context.Post.Include(p => p.Images)
                         where p.Id == id
                         select p;
-            var post_db = _context.Post.Where(p => p.Id == id).SingleOrDefault();
+            var post_db = _context.Post.Where(p => p.Id == id).First();
             post_db.Comments = post_db.Comments += 1;
             await _context.SaveChangesAsync();
 
@@ -340,17 +362,16 @@ namespace GrowthDiary.Controllers
 
             var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
             //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
-            if (ModelState.IsValid)
+
+            var NewComment = new Comment()  
             {
-                var post = new Comment()
-                {
-                    Contents = inputModel.Content,
-                    CreationTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
-                    ForWhichId = id
-                };
-                _context.Comment.Add(post);
-                await _context.SaveChangesAsync();
-            }
+                Contents = inputModel.Content,
+                CreationTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
+                ForWhichId = id
+            };
+            //post_db.CommentCollection.Add(NewComment);
+            await _context.SaveChangesAsync();
+            
 
             return RedirectToAction(nameof(Index));
         }

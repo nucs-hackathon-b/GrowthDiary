@@ -33,6 +33,10 @@ namespace GrowthDiary.Models
 
         public int Comments { get; set; }
 
+        public virtual ICollection<Comment> CommentCollection { get; set; } = default;
+
+
+
 
         public virtual ICollection<PostImage> Images { get; set; }
     }

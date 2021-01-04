@@ -3,14 +3,16 @@ using System;
 using GrowthDiary.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GrowthDiary.Migrations
 {
     [DbContext(typeof(GrowthDiaryContext))]
-    partial class GrowthDiaryContextModelSnapshot : ModelSnapshot
+    [Migration("20210104081938_CommentCollection")]
+    partial class CommentCollection
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

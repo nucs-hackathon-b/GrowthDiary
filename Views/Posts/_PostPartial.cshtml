@@ -38,7 +38,27 @@
         </div>
 
         <div>
-            @*ここにコメントを表示したい*@
+            @*ここにコメントを表示したい
+
+            @{
+                if (Model.Comments > 0)
+                {
+                    foreach (var comment in Model.CommentCollection)
+                    {
+                        <div>
+                            @comment.Contents
+                        </div>
+                        <small>
+                            @Html.DisplayFor(modelItem => comment.CreationTime)
+                        </small>
+
+                    }
+                }
+            }
+            *@
+
+
+
         </div>
 
         <form asp-controller="Posts" asp-action="Comment" id="form-create-post" enctype="multipart/form-data">
