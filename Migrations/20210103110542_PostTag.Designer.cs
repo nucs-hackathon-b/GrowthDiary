@@ -3,14 +3,16 @@ using System;
 using GrowthDiary.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GrowthDiary.Migrations
 {
     [DbContext(typeof(GrowthDiaryContext))]
-    partial class GrowthDiaryContextModelSnapshot : ModelSnapshot
+    [Migration("20210103110542_PostTag")]
+    partial class PostTag
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,18 +34,8 @@ namespace GrowthDiary.Migrations
                     b.Property<int>("ForWhichId")
                         .HasColumnType("INTEGER");
 
-<<<<<<< HEAD
-                    b.Property<int?>("PostId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("PostId");
-
-=======
-                    b.HasKey("Id");
-
->>>>>>> 2098b81d95d603e7429bb015b110ba32117a9517
                     b.ToTable("Comment");
                 });
 
@@ -102,13 +94,6 @@ namespace GrowthDiary.Migrations
                     b.ToTable("PostImage");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("GrowthDiary.Models.Comment", b =>
-                {
-                    b.HasOne("GrowthDiary.Models.Post", null)
-                        .WithMany("CommentCollection")
-                        .HasForeignKey("PostId");
-=======
             modelBuilder.Entity("GrowthDiary.Models.PostTag", b =>
                 {
                     b.Property<int>("PostId")
@@ -136,7 +121,6 @@ namespace GrowthDiary.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tag");
->>>>>>> 2098b81d95d603e7429bb015b110ba32117a9517
                 });
 
             modelBuilder.Entity("GrowthDiary.Models.Post", b =>

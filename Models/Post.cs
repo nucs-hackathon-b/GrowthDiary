@@ -33,9 +33,13 @@ namespace GrowthDiary.Models
 
         public int Comments { get; set; }
 
+<<<<<<< HEAD
         public virtual ICollection<Comment> CommentCollection { get; set; } = default;
 
 
+=======
+        public virtual ICollection<PostTag> PostTags { get; set; }
+>>>>>>> 2098b81d95d603e7429bb015b110ba32117a9517
 
 
         public virtual ICollection<PostImage> Images { get; set; }

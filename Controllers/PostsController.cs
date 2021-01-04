@@ -58,7 +58,8 @@ namespace GrowthDiary.Controllers
                                     .ThenInclude(p => p.Replies)
                                     .Include(p => p.InReplyTo)
                                     .Include(p => p.Images)
-                                    
+                                    .Include(p=>p.PostTags)
+                                    .ThenInclude(pt=>pt.Tag)
                         where p.Id == id
                         select p;
             var post = query.FirstOrDefault();
@@ -66,31 +67,7 @@ namespace GrowthDiary.Controllers
             {
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["InputModel"] = new PostInputModel()
-            {
-                InReplyToId = id
-            };
-            /*
-            var ReturnModel = new ViewModelWrapper
-            {
-                Post = new Post
-                {
-                    Id = post.Id,
-                    CreationTime = post.CreationTime,
-                    LastModifiedTime = post.LastModifiedTime,
-                    InReplyToId = post.InReplyToId,
-                    InReplyTo = post.InReplyTo,
-                    Replies = post.Replies,
-                    Content = post.Content,
-                    Like = post.Like,
-                    Comments = post.Comments,
-                    Images = post.Images
-                },
-                Comment = new List<Comment>
-
-                { new Comment {Id = 1, Contents = "aaa", CreationTime = post.CreationTime, ForWhichId = post.Id}}
-            };
-            */
+            ViewData["InputModel"] = new PostInputModel();
             return View(post);
 
             //var post = await _context.Post
@@ -123,7 +100,6 @@ namespace GrowthDiary.Controllers
                 var post = new Post()
                 {
                     Content = inputModel.Content,
-                    InReplyToId = inputModel.InReplyToId,
                     CreationTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
                     LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
                     Like = 0
@@ -131,7 +107,36 @@ namespace GrowthDiary.Controllers
                 _context.Post.Add(post);
                 await _context.SaveChangesAsync();
                 _logger.LogInformation($"{inputModel.Files}");
-                post = _context.Post.Where(p => p.Id == post.Id).Include(p => p.Images).Single();
+                post = _context.Post.Where(p => p.Id == post.Id).Include(p => p.Images).Include(p=>p.PostTags).Single();
+                if (inputModel.Tags != null)
+                {
+                    foreach(string tagName in inputModel.Tags)
+                    {
+                        _logger.LogInformation(tagName);
+                        var tag = await _context.Tag.Where(t => t.Name == tagName).Include(t => t.PostTags).SingleOrDefaultAsync();
+                        if (tag is null)
+                        {
+                            tag = new Tag()
+                            {
+                                Name = tagName
+                            };
+                            _context.Tag.Add(tag);
+                            post.PostTags.Add(new PostTag()
+                            {
+                                Post = post,
+                                Tag = tag
+                            });
+                        }
+                        else
+                        {
+                            tag.PostTags.Add(new PostTag()
+                            {
+                                PostId = post.Id,
+                                Tag = tag
+                            });
+                        }
+                    }
+                }
                 // Upload image files
                 if (inputModel.Files != null)
                 {
@@ -174,7 +179,9 @@ namespace GrowthDiary.Controllers
                 return NotFound();
             }
 
-            var query = from p in _context.Post.Include(p => p.Images) where p.Id == id select p;
+            var query = from p in _context.Post.Include(p => p.Images).
+                        Include(p=>p.PostTags).ThenInclude(pt=>pt.Tag) 
+                        where p.Id == id select p;
             var post = await query.SingleOrDefaultAsync();
             if (post is null)
             {
@@ -186,8 +193,13 @@ namespace GrowthDiary.Controllers
                 Content = post.Content,
                 ImagesToRemove = new List<string>(),
                 ImageUrls = new List<string>(),
-                Files = new List<IFormFile>()
+                Files = new List<IFormFile>(),
+                Tags = new List<string>()
             };
+            foreach(var tag in post.PostTags)
+            {
+                input.Tags.Add(tag.Tag.Name);
+            }
             foreach(var image in post.Images)
             {
                 input.ImageUrls.Add(image.Url);
@@ -212,10 +224,60 @@ namespace GrowthDiary.Controllers
             {
                 try
                 {
-                    var query = from pst in _context.Post.Include(p=>p.Images) where pst.Id == id select pst;
+                    var query = from pst in _context.Post.Include(p=>p.Images)
+                                .Include(p=>p.PostTags).ThenInclude(pt=>pt.Tag)
+                                where pst.Id == id select pst;
                     var p = await query.SingleAsync();
                     if (p != null)
                     {
+                        if (input.Tags != null)
+                        {
+                            LinkedList<string> tagList = new LinkedList<string>();
+                            foreach(var pt in p.PostTags)
+                            {
+                                tagList.AddLast(pt.Tag.Name);
+                            }
+                            foreach(var tagName in input.Tags)
+                            {
+                                var tag = await _context.Tag.Where(t => t.Name == tagName).SingleOrDefaultAsync();
+                                if(tag is null)
+                                {
+                                    tag = new Tag()
+                                    {
+                                        Name = tagName
+                                    };
+                                    _context.Tag.Add(tag);
+                                    p.PostTags.Add(new PostTag()
+                                    {
+                                        Post = p,
+                                        Tag = tag
+                                    });
+                                }
+                                else
+                                {
+                                    var postTag =await _context.PostTag.Include(pt => pt.Tag).Include(pt => pt.Post)
+                                        .Where(pt => pt.TagId == tag.Id && pt.PostId == p.Id).SingleOrDefaultAsync();
+                                    if(postTag is null)
+                                    {
+                                        p.PostTags.Add(new PostTag()
+                                        {
+                                            Post = p,
+                                            Tag = tag
+                                        });
+                                    }
+                                    else
+                                    {
+                                        tagList.Remove(tag.Name);
+                                    }
+                                }
+                            }
+                            foreach(var t in tagList)
+                            {
+                                var postTag = await _context.PostTag.Include(pt => pt.Tag).Include(pt => pt.Post)
+                                        .Where(pt => pt.Tag.Name == t && pt.PostId == p.Id).SingleOrDefaultAsync();
+                                _context.PostTag.Remove(postTag);
+                            }
+                        }
                         if (input.ImagesToRemove != null)
                         {
                             foreach (var url in input.ImagesToRemove)
@@ -252,7 +314,7 @@ namespace GrowthDiary.Controllers
                                 });
                             }
                         }
-                        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");
+                        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo"); // For Linux
                         p.LastModifiedTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
                         p.Content = input.Content;
                         await _context.SaveChangesAsync();
@@ -360,18 +422,19 @@ namespace GrowthDiary.Controllers
             //コメントの表示時はforwhichpostで検索かけてヒットしたやつを並べる
             //コメントをDBに書き込む
 
-            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
-            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
-
-            var NewComment = new Comment()  
+            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
+            if (ModelState.IsValid)
             {
-                Contents = inputModel.Content,
-                CreationTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
-                ForWhichId = id
-            };
-            //post_db.CommentCollection.Add(NewComment);
-            await _context.SaveChangesAsync();
-            
+                var post = new Comment()
+                {
+                    Contents = inputModel.Content,
+                    CreationTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
+                    ForWhichId = id
+                };
+                _context.Comment.Add(post);
+                await _context.SaveChangesAsync();
+            }
 
             return RedirectToAction(nameof(Index));
         }

@@ -13,8 +13,7 @@ namespace GrowthDiary.ViewModels
         [Required(ErrorMessage = "The {0} field is required.")]
         public string Content { get; set; }
 
-
-        public int? InReplyToId { get; set; }
+        public IList<string> Tags { get; set; }
 
         public IList<IFormFile> Files { get; set; }
     }

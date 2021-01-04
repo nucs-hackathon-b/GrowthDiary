@@ -4,6 +4,12 @@
     ViewData["Title"] = "Edit";
 }
 
+@{
+    var rand = new Random();
+    var colors = new string[] { "bg-primary text-light", "bg-secondary text-light", "bg-success text-light", "bg-danger text-light",
+    "bg-warning text-dark","bg-info text-dark","bg-light text-dark","bg-dark text-light"};
+}
+
 <h1>Edit</h1>
 
 <h4>Post</h4>
@@ -18,15 +24,35 @@
                 <textarea asp-for="Content" class="form-control">@Model.Content</textarea>
                 <span asp-validation-for="Content" class="text-danger"></span>
             </div>
+            <div id="div-tag">
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="mr-1 mb-3 badge @colors[rand.Next(colors.Length)]">
+                        @tag
+                        <a href="#" class="text-decoration-none link-remove-tag">×</a>
+                        <input name="Tags[]" value="@tag" class="input-tag" hidden />
+                    </span>
+                }
+            </div>
             <div>
                 @foreach (var url in Model.ImageUrls)
                 {
-                <div>
-                    <img src="@url" height="100" />
-                    <button class="btn btn-danger btn-remove-image" data-image-url="@url">Remove</button>
+                <div class="post-image-container">
+                    <img src="@url" height="100px"  class="post-image" style="width:100%" />
+                    <div class="post-image-middle">
+                        <button class="btn btn-danger btn-remove-image post-image-text" data-image-url="@url">Remove</button>
+                    </div>
+                    @*<button class="btn btn-danger btn-remove-image" data-image-url="@url">Remove</button>*@
                 </div>
                 }
             </div>
+
+
+            <div class="input-group mb-3">
+                <input type="text" name="input-tag" id="input-tag" class="form-control" />
+                <button class="btn btn-info" id="btn-add-tag">Add Tag</button>
+            </div>
+
             <div class="form-group">
                 <button id="btn-upload-image" class="btn btn-warning">Upload Image</button>
                 <input type="submit" value="Save" class="btn btn-primary" />
@@ -45,5 +71,9 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-<script src="~/js/edit-post.js"></script>
+    <script src="~/js/edit-post.js"></script>
+}
+
+@section Styles{ 
+<link rel="stylesheet" href="~/css/edit-post.css" />
 }
