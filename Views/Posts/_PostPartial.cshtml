@@ -6,28 +6,30 @@
 @model Post
 @{
 }
+
+@{
+    var rand = new Random();
+    var colors = new string[] { "bg-primary text-light", "bg-secondary text-light", "bg-success text-light", "bg-danger text-light",
+    "bg-warning text-dark","bg-info text-dark","bg-light text-dark","bg-dark text-light"};
+}
+
 <div>
     <div style="position: relative;">
-
-        @if (Model.InReplyTo != null)
-        {
-            <div class="m-3 p-2 border border-secondary rounded bg-light">
-                <p>
-                    @Model.InReplyTo.Content
-                </p>
-            </div>
-        }
-
-        <div>@Html.DisplayFor(modelItem => Model.Content)</div>
-        <ul>
+        <div>
             @if (Model.PostTags != null)
             {
-                @foreach(var tag in Model.PostTags)
+                @foreach (var tag in Model.PostTags)
                 {
-            <li>@tag.Tag.Name</li>
+                    <span class="badge rounded-pill @colors[rand.Next(colors.Length)]">@tag.Tag.Name</span>
                 }
             }
-        </ul>
+        </div>
+
+        <hr />
+
+        <div>@Html.DisplayFor(modelItem => Model.Content)</div>
+        <hr />
+
 
         <div>
             @foreach (var image in Model.Images)
@@ -64,7 +66,6 @@
                     <input type="submit" value="Add Comment" class="btn btn-primary" />
                 </div>
             </div>
-            @Html.HiddenFor(m => m.InReplyToId)
         </form>
 
 
@@ -96,11 +97,12 @@
 
 
     </div>
-                <form class="form-inline" asp-action="Delete" asp-controller="Posts" method="post" asp-route-id="@Model.Id">
+                @*<form class="form-inline" asp-action="Delete" asp-controller="Posts" method="post" asp-route-id="@Model.Id">
                     <button type="submit" class="btn btn-outline-danger">@Localizer["Delete"]</button>
-                </form>
-                <a class="btn btn-outline-secondary ml-2" asp-controller="Posts" asp-action="Edit" asp-route-id="@Model.Id">@Localizer["Edit"]</a>
-            
-       
+                </form>*@
+<div class="mt-2">
+    <a class="btn btn-outline-secondary" asp-controller="Posts" asp-action="Edit" asp-route-id="@Model.Id">@Localizer["Edit"]</a>
+    <a class="btn btn-outline-danger ml-2" asp-controller="Posts" asp-action="Delete" asp-route-id="@Model.Id">Delete</a>
+</div>
 
 </div>
