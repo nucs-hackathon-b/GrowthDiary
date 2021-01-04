@@ -4,6 +4,12 @@
     ViewData["Title"] = "Edit";
 }
 
+@{
+    var rand = new Random();
+    var colors = new string[] { "bg-primary text-light", "bg-secondary text-light", "bg-success text-light", "bg-danger text-light",
+    "bg-warning text-dark","bg-info text-dark","bg-light text-dark","bg-dark text-light"};
+}
+
 <h1>Edit</h1>
 
 <h4>Post</h4>
@@ -18,6 +24,16 @@
                 <textarea asp-for="Content" class="form-control">@Model.Content</textarea>
                 <span asp-validation-for="Content" class="text-danger"></span>
             </div>
+            <div id="div-tag">
+                @foreach (var tag in Model.Tags)
+                {
+                    <span class="mr-1 mb-3 badge @colors[rand.Next(colors.Length)]">
+                        @tag
+                        <a href="#" class="text-decoration-none link-remove-tag">×</a>
+                        <input name="Tags[]" value="@tag" class="input-tag" hidden />
+                    </span>
+                }
+            </div>
             <div>
                 @foreach (var url in Model.ImageUrls)
                 {
@@ -27,17 +43,9 @@
                     </div>
                 }
             </div>
-            Tags:
-            <ul id="tag-list">
-                @foreach (var tag in Model.Tags)
-                {
-                    <li>
-                        <input name="Tags[]" value="@tag" class="input-tag" />
-                        <button class="btn btn-danger btn-remove-tag" data-tag="@tag">Remove</button>
-                    </li>
-                }
-            </ul>
-            <div class="form-group" id="div-tag">
+
+
+            <div class="input-group mb-3">
                 <input type="text" name="input-tag" id="input-tag" class="form-control" />
                 <button class="btn btn-info" id="btn-add-tag">Add Tag</button>
             </div>
@@ -60,5 +68,5 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-<script src="~/js/edit-post.js"></script>
+    <script src="~/js/edit-post.js"></script>
 }

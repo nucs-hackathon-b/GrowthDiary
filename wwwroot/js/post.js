@@ -40,7 +40,7 @@ $(() => {
         })
         span.append(a);
         $('#div-tag').append(span);
-        $('#div-tag').append(input);
+        span.append(input);
     })
 
     $('body').on('click', 'a.like-link', function () {

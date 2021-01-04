@@ -25,7 +25,10 @@
             }
         </div>
 
+        <hr />
+
         <div>@Html.DisplayFor(modelItem => Model.Content)</div>
+        <hr />
 
 
         <div>
@@ -63,7 +66,6 @@
                     <input type="submit" value="Add Comment" class="btn btn-primary" />
                 </div>
             </div>
-            @Html.HiddenFor(m => m.InReplyToId)
         </form>
 
 
@@ -95,11 +97,12 @@
 
 
     </div>
-                <form class="form-inline" asp-action="Delete" asp-controller="Posts" method="post" asp-route-id="@Model.Id">
+                @*<form class="form-inline" asp-action="Delete" asp-controller="Posts" method="post" asp-route-id="@Model.Id">
                     <button type="submit" class="btn btn-outline-danger">@Localizer["Delete"]</button>
-                </form>
-                <a class="btn btn-outline-secondary ml-2" asp-controller="Posts" asp-action="Edit" asp-route-id="@Model.Id">@Localizer["Edit"]</a>
-            
-       
+                </form>*@
+<div class="mt-2">
+    <a class="btn btn-outline-secondary" asp-controller="Posts" asp-action="Edit" asp-route-id="@Model.Id">@Localizer["Edit"]</a>
+    <a class="btn btn-outline-danger ml-2" asp-controller="Posts" asp-action="Delete" asp-route-id="@Model.Id">Delete</a>
+</div>
 
 </div>

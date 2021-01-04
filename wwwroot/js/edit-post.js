@@ -12,7 +12,7 @@
         return false;
     })
 
-    $('.btn-remove-tag').click(function (e) {
+    $('.link-remove-tag').click(function (e) {
         e.preventDefault();
         $(this).parent().remove();
         return false;
@@ -27,18 +27,28 @@
         input.click();
     });
 
+   
+
     $('#btn-add-tag').click(function (e) {
         e.preventDefault();
         let input = $('<input>');
         input.attr('type', 'text').attr('name', 'Tags[]').val($('#input-tag').val());
         //input.prop('disabled', true);
+        input.prop('hidden', true);
         $('#input-tag').val('');
-        let li = $('<li></li>');
-        li.append(input);
-        let button = $('<button></button>');
-        button.addClass('btn').addClass('btn-danger').addClass('btn-remove-tag').attr('data-tag', input.val());
-        li.append(input);
-        $('#tag-list').append(li);
+        let span = $('<span></span>');
+        span.addClass('mr-1 mb-3').addClass('badge').addClass(randomColor());
+        span.text(input.val());
+        let a = $('<a></a>');
+        a.addClass('text-decoration-none').addClass('link-remove-tag').text('×').attr('href', '#');
+        //a.click(function (e) {
+        //    e.preventDefault();
+        //    $(this).parent().remove();
+        //    return false;
+        //})
+        span.append(a);
+        $('#div-tag').append(span);
+        span.append(input);
     })
 
     $('#form-edit-post').on('submit', function () {
@@ -77,4 +87,12 @@ function handleUploadImage() {
             $('#div-images').append(div);
         }
     }
+}
+
+function randomColor() {
+    let colors = [
+        "bg-primary text-light", "bg-secondary text-light", "bg-success text-light", "bg-danger text-light",
+        "bg-warning text-dark", "bg-info text-dark", "bg-light text-dark", "bg-dark text-light"
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
 }
