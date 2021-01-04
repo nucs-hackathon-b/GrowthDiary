@@ -6,10 +6,13 @@
 
 <h1>Create</h1>
 
-
-<section class="mb-2">
-    <partial name="_CreatePostPartial" model=Model />
-</section>
+<div class="row">
+    <div class="col-md-4">
+        <section class="mb-2">
+            <partial name="_CreatePostPartial" model=Model />
+        </section>
+    </div>
+</div>
 
 @*<h4>Post</h4>
     <hr />
@@ -36,4 +39,7 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script src="~/js/post.js"></script>
+}
+@section Styles{
+    <link rel="stylesheet" href="~/css/post.css" />
 }

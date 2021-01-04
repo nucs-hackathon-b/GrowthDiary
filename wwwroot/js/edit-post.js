@@ -67,12 +67,15 @@ function handleUploadImage() {
     if (this.files.length > 0) {
         for (const file of this.files) {
             let div = $('<div></div>');
+            div.addClass("post-image-container");
             let img = $('<img>');
             img.attr('src', URL.createObjectURL(file))
-                .addClass('img-selected')
+                .addClass('img-selected').addClass('post-image').attr('style', 'width:100%').attr('height','100px')
                 .on('load', function () {
                     URL.revokeObjectURL(this.src);
                 });
+            let middle = $('<div></div>');
+            middle.addClass("post-image-middle");
             let input = $('<input>');
             input.attr('type', 'file').prop('hidden', true)
                 .addClass('input-upload-image');
@@ -81,9 +84,11 @@ function handleUploadImage() {
             input.prop('files', dt.files);
             let btn = $('<button></button>');
             btn.addClass('btn').addClass('btn-danger')
+                .addClass('post-image-text')
                 .text('Remove')
                 .on('click', function () { div.remove(); });
-            div.append(img).append(input).append(btn);
+            middle.append(btn);
+            div.append(img).append(middle).append(input);
             $('#div-images').append(div);
         }
     }

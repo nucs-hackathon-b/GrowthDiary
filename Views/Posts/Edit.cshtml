@@ -37,10 +37,13 @@
             <div>
                 @foreach (var url in Model.ImageUrls)
                 {
-                    <div>
-                        <img src="@url" height="100" />
-                        <button class="btn btn-danger btn-remove-image" data-image-url="@url">Remove</button>
+                <div class="post-image-container">
+                    <img src="@url" height="100px"  class="post-image" style="width:100%" />
+                    <div class="post-image-middle">
+                        <button class="btn btn-danger btn-remove-image post-image-text" data-image-url="@url">Remove</button>
                     </div>
+                    @*<button class="btn btn-danger btn-remove-image" data-image-url="@url">Remove</button>*@
+                </div>
                 }
             </div>
 
@@ -69,4 +72,8 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script src="~/js/edit-post.js"></script>
+}
+
+@section Styles{ 
+<link rel="stylesheet" href="~/css/edit-post.css" />
 }
