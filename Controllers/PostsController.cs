@@ -505,9 +505,17 @@ namespace GrowthDiary.Controllers
             return _context.Post.Any(e => e.Id == id);
         }
         
-        private IQueryable<Post> SearchPosts(String search)
+        private IQueryable<Post> SearchPosts(String search, String tags)
         {
             var posts = _context.Post.AsQueryable();
+
+            if (!String.IsNullOrEmpty(tags))
+            {
+                var tagsList = tags.Split(',');
+                foreach (var tag in tagsList)
+                    posts = posts.Where(e => e.PostTags.Any(ptags => ptags.Tag.Name.Contains(tag)));
+            }
+
             if (!String.IsNullOrEmpty(search))
                 posts = posts.Where(e => e.Content.Contains(search));
 
@@ -535,9 +543,9 @@ namespace GrowthDiary.Controllers
             return posts;
         }
 
-        public ActionResult GetPostsData(string search)
+        public ActionResult GetPostsData(string search, string tags)
         {
-            var posts = SearchPosts(search);
+            var posts = SearchPosts(search, tags);
             return PartialView(posts);
         }
 

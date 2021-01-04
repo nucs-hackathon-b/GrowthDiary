@@ -8,18 +8,23 @@
 <h1>Index</h1>
 
 <form id="formPostsSearch">
-    <input type="text" id="searchTxt" />
-    <input type="submit" />
+    <input type="text" class="csstxt" id="searchTxt" placeholder="Search Content"/>
+    <input type="text" class="csstxt" id="tagsTxt" placeholder="Search Tags"/>
+    <input type="submit" class="csssubmit"/>
 </form>
 
-<form id="formSearchBy">
-    <p>Order by:</p>
-    <button type="button" class="orderBtn" order="time" desc="true">Newest</button>
-    <button type="button" class="orderBtn" order="time" desc="false">Oldest</button>
-    <button type="button" class="orderBtn" order="like" desc="true">Most Liked</button>
-    <button type="button" class="orderBtn" order="like" desc="false">Least Liked</button>
-    <button type="button" class="orderBtn" order="comment" desc="true">Most Commented</button>
-    <button type="button" class="orderBtn" order="comment" desc="false">Least Commented</button>
+@*
+<section class="mb-2">
+    <partial name="_CreatePostPartial" model=Model />
+</section>*@
+
+<form id="formSearchBy" class="button">
+    <button type="button" class="orderBtn cssbtn" order="time" desc="true"　id="btn1">Newest</button>
+    <button type="button" class="orderBtn cssbtn" order="time" desc="false" id="btn2">Oldest</button>
+    <button type="button" class="orderBtn cssbtn" order="like" desc="true" id="btn3">Most Liked</button>
+    <button type="button" class="orderBtn cssbtn" order="like" desc="false" id="btn4">Least Liked</button>
+    <button type="button" class="orderBtn cssbtn" order="comment" desc="true" id="btn5">Most Commented</button>
+    <button type="button" class="orderBtn cssbtn" order="comment" desc="false" id="btn6">Least Commented</button>
 </form>
 
 <div id="postTable">
@@ -27,98 +32,7 @@
 </div>
 
 @section Scripts{
-    <script>
-        $(document).ready(function () {
-            var $loading = $('#loadingDiv').hide();
-            $(document)
-                .ajaxStart(function () {
-                    $loading.show();
-                })
-                .ajaxStop(function () {
-                    $loading.hide();
-                });
-
-            $("#formPostsSearch").submit(function (event) {
-                event.preventDefault();
-
-                $.ajax({
-                    url: "@(Url.Action("GetPostsData"))",
-                    data: { search: $("#searchTxt").val() },
-                    type: "GET",
-                    success: function (data) {
-                        $("#postTable").html(data);
-                        addLikeButtons();
-                        //alert(data);
-                    },
-                    error: failedSearch
-                });
-
-                function failedSearch() {
-                    $("#postTable").html = "<p>Oops</p>";
-                    ///alert();
-                }
-
-            });
-
-            $("#formPostsSearch").submit();
-
-            var btns = document.getElementsByClassName("orderBtn");
-
-            Array.from(btns).forEach(function (btn) {
-                btn.addEventListener("click", function () {
-                    //document.cookie = "order=" + btn.getAttribute("order");
-                    //document.cookie = "descending=" + btn.getAttribute("desc");
-                    setCookie("order", btn.getAttribute("order"), 1);
-                    setCookie("descending", btn.getAttribute("desc"), 1);
-                    $("#formPostsSearch").submit();
-                });
-            });
-
-            function addLikeButtons() {
-                var likeBtns = document.getElementsByClassName("likeBtn");
-                //alert(likeBtns.length);
-
-                Array.from(likeBtns).forEach(function (btn) {
-
-
-                    btn.addEventListener("click", function () {
-                        $.ajax({
-                            url: "@(Url.Action("LikeInc"))" + "/" + btn.getAttribute("btnId") + "?inc=1",
-                            type: "POST",
-                            async: true,
-                            success: function (data) {
-
-                                $("#formPostsSearch").submit();
-                            },
-                            error: function (xhr) {
-                                alert('Error: ' + xhr.statusText + " " + data);
-                            }
-                        });
-                    });
-                });
-            }
-        });
-
-        function setCookie(cname, cvalue, exdays) {
-            var d = new Date();
-            d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-            var expires = "expires=" + d.toUTCString();
-            document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-        }
-
-        function getCookie(cname) {
-            var name = cname + "=";
-            var ca = document.cookie.split(';');
-            for (var i = 0; i < ca.length; i++) {
-                var c = ca[i];
-                while (c.charAt(0) == ' ') {
-                    c = c.substring(1);
-                }
-                if (c.indexOf(name) == 0) {
-                    return c.substring(name.length, c.length);
-                }
-            }
-            return "";
-        }
-    </script>
-} 
+    <script src="~/js/index.js"></script>
+    @*@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/post.js"></script>*@
+}
