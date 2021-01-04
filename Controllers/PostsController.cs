@@ -40,7 +40,8 @@ namespace GrowthDiary.Controllers
         public async Task<IActionResult> Index(String search)
         {
             ViewBag.search = search;
-            return View(await SearchPosts(search).ToListAsync());
+            //return View(await SearchPosts(search).ToListAsync());
+            return View();
         }
 
         // GET: Posts/Details/5
@@ -399,11 +400,45 @@ namespace GrowthDiary.Controllers
                     System.IO.File.Delete(path);
                 }
                 _context.Post.Remove(post);
+            }*/
+                
+            await _context.SaveChangesAsync();
+            //return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
+        }
+
+        
+        // POST: Posts/Like/5
+        [HttpPost, ActionName("LikeInc")]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> LikeIncrement(int id)
+        public async void LikeIncrement(int id, int inc)
+        {
+            //var post = await _context.Post.FindAsync(id);
+            var query = from p in _context.Post.Include(p => p.Images)
+                        where p.Id == id
+                        select p;
+            var post = _context.Post.Where(p => p.Id == id).SingleOrDefault();
+            post.Like = post.Like += inc;
+
+
+                /*
+            var post = await query.SingleOrDefaultAsync();
+            if (post != null)
+            {
+                foreach (var image in post.Images)
+                {
+                    var path = Path.Combine(_environment.WebRootPath, image.Url.Substring(1));
+                    System.IO.File.Delete(path);
+                }
+                _context.Post.Remove(post);
             }
                 */
             await _context.SaveChangesAsync();
             //return RedirectToAction(nameof(Index));
-            return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
+            //return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
+            //return PartialView(_context.Post);
+            //return post.Like;
         }
 
         // POST: Posts/Comment/5
@@ -473,19 +508,48 @@ namespace GrowthDiary.Controllers
             return _context.Post.Any(e => e.Id == id);
         }
         
-        private IQueryable<Post> SearchPosts(String search)
+        private IQueryable<Post> SearchPosts(String search, String tags)
         {
             var posts = _context.Post.AsQueryable();
+
+            if (!String.IsNullOrEmpty(tags))
+            {
+                var tagsList = tags.Split(',');
+                foreach (var tag in tagsList)
+                    posts = posts.Where(e => e.PostTags.Any(ptags => ptags.Tag.Name.Contains(tag)));
+            }
+
             if (!String.IsNullOrEmpty(search))
                 posts = posts.Where(e => e.Content.Contains(search));
 
-            var ascending = CookieToBool("ascending");
+            var descending = CookieToBool("descending");
+            var orderCookie = ReadCookie("order");
 
-            if (ascending)
-                posts = posts.OrderBy(e => e.CreationTime);
-            else
-                posts = posts.OrderByDescending(e => e.CreationTime);
+            switch (orderCookie)
+            {
+                case "time":
+                    if (descending) posts = posts.OrderByDescending(e => e.CreationTime);
+                    else posts = posts.OrderBy(e => e.CreationTime);
+                    break;
+                case "like":
+                    if (descending) posts = posts.OrderByDescending(e => e.Like);
+                    else posts = posts.OrderBy(e => e.Like);
+                    break;
+                case "comment":
+                    if (descending) posts = posts.OrderByDescending(e => e.Comments);
+                    else posts = posts.OrderBy(e => e.Comments);
+                    break;
+                default:
+                    break;
+            }
+
             return posts;
+        }
+
+        public ActionResult GetPostsData(string search, string tags)
+        {
+            var posts = SearchPosts(search, tags);
+            return PartialView(posts);
         }
 
         public IActionResult ToggleOrder(string search)
