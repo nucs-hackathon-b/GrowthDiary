@@ -40,7 +40,8 @@ namespace GrowthDiary.Controllers
         public async Task<IActionResult> Index(String search)
         {
             ViewBag.search = search;
-            return View(await SearchPosts(search).ToListAsync());
+            //return View(await SearchPosts(search).ToListAsync());
+            return View();
         }
 
         // GET: Posts/Details/5
@@ -476,13 +477,30 @@ namespace GrowthDiary.Controllers
             if (!String.IsNullOrEmpty(search))
                 posts = posts.Where(e => e.Content.Contains(search));
 
-            var ascending = CookieToBool("ascending");
+            var descending = CookieToBool("descending");
+            var orderCookie = ReadCookie("order");
 
-            if (ascending)
-                posts = posts.OrderBy(e => e.CreationTime);
-            else
-                posts = posts.OrderByDescending(e => e.CreationTime);
+            switch (orderCookie)
+            {
+                case "time":
+                    if (descending) posts = posts.OrderByDescending(e => e.CreationTime);
+                    else posts = posts.OrderBy(e => e.CreationTime);
+                    break;
+                case "like":
+                    if (descending) posts = posts.OrderByDescending(e => e.Like);
+                    else posts = posts.OrderBy(e => e.Like);
+                    break;
+                default:
+                    break;
+            }
+
             return posts;
+        }
+
+        public ActionResult GetPostsData(string search)
+        {
+            var posts = SearchPosts(search);
+            return PartialView(posts);
         }
 
         public IActionResult ToggleOrder(string search)

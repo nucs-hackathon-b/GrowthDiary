@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<GrowthDiary.Models.Post>
+@using System.Web.Mvc
 
 @{
     ViewData["Title"] = "Index";
@@ -6,63 +7,73 @@
 
 <h1>Index</h1>
 
+<form id="formPostsSearch">
+    <input type="text" id="searchTxt" />
+    <input type="submit" />
+</form>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<form asp-action="Index" method="get">
-    <p>
-        Search: <input type="text" name="search" />
-        <input type="submit" value="Filter" />
-    </p>
+<form id="formSearchBy">
+    <p>Order by:</p>
+    <button type="button" class="orderBtn" order="time" desc="true">Newest</button>
+    <button type="button" class="orderBtn" order="time" desc="false">Oldest</button>
+    <button type="button" class="orderBtn" order="like" desc="true">Most Liked</button>
+    <button type="button" class="orderBtn" order="like" desc="false">Least Liked</button>
 </form>
-<form asp-action="ToggleOrder">
-    <p>
-        <input type="hidden" name="search" value=
-                @(ViewBag.search)
-               />
-        <input type="submit" value="Toggle Order" />
-    </p>
-</form>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Content)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreationTime)
-            </th>
-            <th>like</th>
-            <th>comments</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Content)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreationTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Like)
-                <form asp-controller="Posts" asp-action="Like" asp-route-id="@item.Id">
-                    <input type="hidden" name="search" value=@(ViewBag.search) />
-                    <input type="submit" value="like">
-                </form>
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Comments)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+
+<div id="postTable">
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $("#formPostsSearch").submit(function (event) {
+                event.preventDefault();
+
+                $.ajax({
+                    url: "@(Url.Action("GetPostsData"))",
+                    data: { search: $("#searchTxt").val() },
+                    type: "GET",
+                    success: function (data) {
+                        $("#postTable").html(data);
+                        //alert(data);
+                    },
+                    error: failedSearch
+                });
+
+                function failedSearch() {
+                    $("#postTable").html = "<p>Oops</p>";
+                    ///alert();
+                }
+
+            });
+
+            $("#formPostsSearch").submit();
+
+            var btns = document.getElementsByClassName("orderBtn");
+
+            Array.from(btns).forEach(function (btn) {
+                btn.addEventListener("click", function () {
+                    document.cookie = "order=" + btn.getAttribute("order");
+                    document.cookie = "descending=" + btn.getAttribute("desc");
+                    $("#formPostsSearch").submit();
+                });
+            });
+
+            /*
+            for (var i = 0; i < btns.length; ++i) {
+                alert(i);
+                btns[i].addEventListener('click', function () {
+                    orderFunc(btn.val(), btn.attr('desc'), false);
+                });
+            }
+            */
+            
+
+            function orderFunc(order, desc) {
+                document.cookie = "order=" + order;
+                document.cookie = "descending=" + desc;
+                $("#formPostsSearch").submit();
+            }
+        });
+    </script>
+} 
