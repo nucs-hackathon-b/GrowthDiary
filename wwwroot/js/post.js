@@ -26,7 +26,20 @@ $(() => {
         let input = $('<input>');
         input.attr('type', 'text').attr('name', 'Tags[]').val($('#input-tag').val());
         //input.prop('disabled', true);
+        input.prop('hidden', true);
         $('#input-tag').val('');
+        let span = $('<span></span>');
+        span.addClass('m-1').addClass('badge').addClass(randomColor());
+        span.text(input.val());
+        let a = $('<a></a>');
+        a.addClass('text-decoration-none').text('×').attr('href','#');
+        a.click(function (e) {
+            e.preventDefault();
+            $(this).parent().remove();
+            return false;
+        })
+        span.append(a);
+        $('#div-tag').append(span);
         $('#div-tag').append(input);
     })
 
@@ -125,4 +138,12 @@ function handleUploadImage() {
             $('#div-images').append(div);
         }
     }
+}
+
+function randomColor() {
+    let colors = [
+        "bg-primary text-light", "bg-secondary text-light", "bg-success text-light", "bg-danger text-light",
+        "bg-warning text-dark", "bg-info text-dark", "bg-light text-dark", "bg-dark text-light"
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
 }

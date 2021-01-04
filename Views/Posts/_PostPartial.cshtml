@@ -6,28 +6,27 @@
 @model Post
 @{
 }
+
+@{
+    var rand = new Random();
+    var colors = new string[] { "bg-primary text-light", "bg-secondary text-light", "bg-success text-light", "bg-danger text-light",
+    "bg-warning text-dark","bg-info text-dark","bg-light text-dark","bg-dark text-light"};
+}
+
 <div>
     <div style="position: relative;">
-
-        @if (Model.InReplyTo != null)
-        {
-            <div class="m-3 p-2 border border-secondary rounded bg-light">
-                <p>
-                    @Model.InReplyTo.Content
-                </p>
-            </div>
-        }
-
-        <div>@Html.DisplayFor(modelItem => Model.Content)</div>
-        <ul>
+        <div>
             @if (Model.PostTags != null)
             {
-                @foreach(var tag in Model.PostTags)
+                @foreach (var tag in Model.PostTags)
                 {
-            <li>@tag.Tag.Name</li>
+                    <span class="badge rounded-pill @colors[rand.Next(colors.Length)]">@tag.Tag.Name</span>
                 }
             }
-        </ul>
+        </div>
+
+        <div>@Html.DisplayFor(modelItem => Model.Content)</div>
+
 
         <div>
             @foreach (var image in Model.Images)
