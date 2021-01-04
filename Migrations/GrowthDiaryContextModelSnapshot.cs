@@ -32,18 +32,10 @@ namespace GrowthDiary.Migrations
                     b.Property<int>("ForWhichId")
                         .HasColumnType("INTEGER");
 
-<<<<<<< HEAD
-                    b.Property<int?>("PostId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("PostId");
+                    b.HasIndex("ForWhichId");
 
-=======
-                    b.HasKey("Id");
-
->>>>>>> 2098b81d95d603e7429bb015b110ba32117a9517
                     b.ToTable("Comment");
                 });
 
@@ -102,13 +94,6 @@ namespace GrowthDiary.Migrations
                     b.ToTable("PostImage");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("GrowthDiary.Models.Comment", b =>
-                {
-                    b.HasOne("GrowthDiary.Models.Post", null)
-                        .WithMany("CommentCollection")
-                        .HasForeignKey("PostId");
-=======
             modelBuilder.Entity("GrowthDiary.Models.PostTag", b =>
                 {
                     b.Property<int>("PostId")
@@ -136,7 +121,15 @@ namespace GrowthDiary.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tag");
->>>>>>> 2098b81d95d603e7429bb015b110ba32117a9517
+                });
+
+            modelBuilder.Entity("GrowthDiary.Models.Comment", b =>
+                {
+                    b.HasOne("GrowthDiary.Models.Post", "Post")
+                        .WithMany("PostComments")
+                        .HasForeignKey("ForWhichId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GrowthDiary.Models.Post", b =>

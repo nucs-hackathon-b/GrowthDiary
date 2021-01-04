@@ -49,36 +49,16 @@
         </div>
 
         <div>
-            @*ここにコメントを表示したい
-
-            @{
-                if (Model.Comments > 0)
-                {
-                    foreach (var comment in Model.CommentCollection)
-                    {
-                        <div>
-                            @comment.Contents
-                        </div>
-                        <small>
-                            @Html.DisplayFor(modelItem => comment.CreationTime)
-                        </small>
-
-                    }
-                }
-            }
-            *@
-
-
-
+            @*ここにコメントを表示したい*@
         </div>
 
-        <form asp-controller="Posts" asp-action="Comment" id="form-create-post" enctype="multipart/form-data">
+        <form asp-controller="Posts" asp-action="Comment" id="form-create-comment">
             <input type="hidden" asp-for="Id" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
-                <textarea class="form-control" placeholder="enter comment..."></textarea>
-                <span asp-validation-for="Content" class="text-danger"></span>
+                <textarea name="Contents" class="form-control" placeholder="enter comment..."></textarea>
+                @*<span asp-validation-for="Contents" class="text-danger"></span>*@
             </div>
             <div class="form-row align-items-center">
                 <div class="col-auto">

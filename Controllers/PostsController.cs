@@ -60,6 +60,7 @@ namespace GrowthDiary.Controllers
                                     .Include(p => p.Images)
                                     .Include(p=>p.PostTags)
                                     .ThenInclude(pt=>pt.Tag)
+                                    .Include(p=>p.PostComments)
                         where p.Id == id
                         select p;
             var post = query.FirstOrDefault();
@@ -68,6 +69,7 @@ namespace GrowthDiary.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["InputModel"] = new PostInputModel();
+            
             return View(post);
 
             //var post = await _context.Post
@@ -407,13 +409,14 @@ namespace GrowthDiary.Controllers
         // POST: Posts/Comment/5
         [HttpPost, ActionName("Comment")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CommentReceived(int id, [Bind] PostInputModel inputModel)
+        public async Task<IActionResult> CommentReceived(int id, [FromForm] Comment comment)
         {
+            _logger.LogInformation(comment.Contents);
             //var post = await _context.Post.FindAsync(id);
             var query = from p in _context.Post.Include(p => p.Images)
                         where p.Id == id
                         select p;
-            var post_db = _context.Post.Where(p => p.Id == id).First();
+            var post_db = _context.Post.Where(p => p.Id == id).SingleOrDefault();
             post_db.Comments = post_db.Comments += 1;
             await _context.SaveChangesAsync();
 
@@ -422,13 +425,13 @@ namespace GrowthDiary.Controllers
             //コメントの表示時はforwhichpostで検索かけてヒットしたやつを並べる
             //コメントをDBに書き込む
 
-            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
-            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time"); // For Windows
+            //var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById("Asia/Tokyo");  // For Linux (Docker)
             if (ModelState.IsValid)
             {
                 var post = new Comment()
                 {
-                    Contents = inputModel.Content,
+                    Contents = comment.Contents,
                     CreationTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo),
                     ForWhichId = id
                 };
