@@ -18,14 +18,26 @@
     <button type="button" class="orderBtn" order="time" desc="false">Oldest</button>
     <button type="button" class="orderBtn" order="like" desc="true">Most Liked</button>
     <button type="button" class="orderBtn" order="like" desc="false">Least Liked</button>
+    <button type="button" class="orderBtn" order="comment" desc="true">Most Commented</button>
+    <button type="button" class="orderBtn" order="comment" desc="false">Least Commented</button>
 </form>
 
 <div id="postTable">
+    <div class="loader" id="loadingDiv"></div>
 </div>
 
 @section Scripts{
     <script>
         $(document).ready(function () {
+            var $loading = $('#loadingDiv').hide();
+            $(document)
+                .ajaxStart(function () {
+                    $loading.show();
+                })
+                .ajaxStop(function () {
+                    $loading.hide();
+                });
+
             $("#formPostsSearch").submit(function (event) {
                 event.preventDefault();
 

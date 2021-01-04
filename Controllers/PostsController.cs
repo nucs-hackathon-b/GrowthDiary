@@ -490,6 +490,10 @@ namespace GrowthDiary.Controllers
                     if (descending) posts = posts.OrderByDescending(e => e.Like);
                     else posts = posts.OrderBy(e => e.Like);
                     break;
+                case "comment":
+                    if (descending) posts = posts.OrderByDescending(e => e.Comments);
+                    else posts = posts.OrderBy(e => e.Comments);
+                    break;
                 default:
                     break;
             }
