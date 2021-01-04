@@ -398,11 +398,45 @@ namespace GrowthDiary.Controllers
                     System.IO.File.Delete(path);
                 }
                 _context.Post.Remove(post);
+            }*/
+                
+            await _context.SaveChangesAsync();
+            //return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
+        }
+
+        
+        // POST: Posts/Like/5
+        [HttpPost, ActionName("LikeInc")]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> LikeIncrement(int id)
+        public async void LikeIncrement(int id, int inc)
+        {
+            //var post = await _context.Post.FindAsync(id);
+            var query = from p in _context.Post.Include(p => p.Images)
+                        where p.Id == id
+                        select p;
+            var post = _context.Post.Where(p => p.Id == id).SingleOrDefault();
+            post.Like = post.Like += inc;
+
+
+                /*
+            var post = await query.SingleOrDefaultAsync();
+            if (post != null)
+            {
+                foreach (var image in post.Images)
+                {
+                    var path = Path.Combine(_environment.WebRootPath, image.Url.Substring(1));
+                    System.IO.File.Delete(path);
+                }
+                _context.Post.Remove(post);
             }
                 */
             await _context.SaveChangesAsync();
             //return RedirectToAction(nameof(Index));
-            return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
+            //return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
+            //return PartialView(_context.Post);
+            //return post.Like;
         }
 
         // POST: Posts/Comment/5
