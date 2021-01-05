@@ -1,8 +1,6 @@
 ﻿@model IEnumerable<GrowthDiary.Models.Post>
 
-@{
-    ViewData["Title"] = "Index";
-}
+@{ ViewData["Title"] = "Index"; }
 
 <h1>Index</h1>
 
@@ -18,9 +16,7 @@
 </form>
 <form asp-action="ToggleOrder">
     <p>
-        <input type="hidden" name="search" value=
-                @(ViewBag.search)
-               />
+        <input type="hidden" name="search" value=@(ViewBag.search) />
         <input type="submit" value="Toggle Order" />
     </p>
 </form>
@@ -39,30 +35,38 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Content)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreationTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Like)
-                <form asp-controller="Posts" asp-action="Like" asp-route-id="@item.Id">
-                    <input type="hidden" name="search" value=@(ViewBag.search) />
-                    <input type="submit" value="like">
-                </form>
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Comments)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+<tr>
+    <td>
+        @Html.DisplayFor(modelItem => item.Content)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.CreationTime)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.Like)
+        @{
+            string idname = item.Id + "likeButton";
+        }
+        <form asp-controller="Posts" asp-action="Like" asp-route-id="@item.Id">
+            <input type="hidden" name="search" value=@(ViewBag.search) />
+            <input type="submit" value="like" id="@idname">
+        </form>
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.Comments)
+    </td>
+    <td>
+        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+    </td>
+</tr>}
     </tbody>
 </table>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/likeButton.js"></script>
+}

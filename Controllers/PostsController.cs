@@ -403,6 +403,7 @@ namespace GrowthDiary.Controllers
                 */
             await _context.SaveChangesAsync();
             //return RedirectToAction(nameof(Index));
+            WriteCookie(id.ToString() + "liked", id.ToString(),  true);
             return RedirectToAction(nameof(Index), new { search = search != "/" ? search : String.Empty });
         }
 
