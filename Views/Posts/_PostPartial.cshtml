@@ -1,7 +1,7 @@
 ﻿@*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 *@
-@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer 
 @using GrowthDiary.Common
 @model Post
 @{
@@ -38,34 +38,46 @@
             }
         </div>
 
-        <div>
+        <div class="mb-3">
             <small>
                 @Html.DisplayFor(modelItem => Model.CreationTime)
                 @Localizer["(Updated at {0})", Model.LastModifiedTime]
             </small>
         </div>
-        <div>
-            @Localizer["{0} Comments", Model.Comments]
+
+        <div class="mb-1">
+            @if (Model.Comments > 1)
+            {
+                @Localizer["{0} Comments", Model.Comments]
+            }
+            else
+            {
+                @Localizer["{0} Comment", Model.Comments]
+            }
         </div>
 
-        <div>
-            @*ここにコメントを表示したい*@
+        
+        <div class="list-group mb-2">
+            @foreach (var comment in Model.PostComments)
+            {
+                <div class="list-group-item">
+                    <p>@comment.Contents</p>
+                    <small>@comment.CreationTime</small>
+                </div>
+            }
         </div>
 
-        <form asp-controller="Posts" asp-action="Comment" id="form-create-post" enctype="multipart/form-data">
+        <form asp-controller="Posts" asp-action="Comment" id="form-create-comment">
             <input type="hidden" asp-for="Id" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
-                <textarea class="form-control" placeholder="enter comment..."></textarea>
-                <span asp-validation-for="Content" class="text-danger"></span>
+                <textarea name="Contents" class="form-control" placeholder="enter comment..."></textarea>
+                @*<span asp-validation-for="Contents" class="text-danger"></span>*@
             </div>
-            <div class="form-row align-items-center">
-                <div class="col-auto">
                     @*<a class="btn btn-warning" id="btn-upload-image">@Localizer["Upload Image"]</a>*@
                     <input type="submit" value="Add Comment" class="btn btn-primary" />
-                </div>
-            </div>
+              
         </form>
 
 

@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GrowthDiary.Migrations
 {
     [DbContext(typeof(GrowthDiaryContext))]
-    [Migration("20201228134958_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20210104081938_CommentCollection")]
+    partial class CommentCollection
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -18,10 +18,39 @@ namespace GrowthDiary.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "3.1.10");
 
+            modelBuilder.Entity("GrowthDiary.Models.Comment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Contents")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ForWhichId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("PostId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("Comment");
+                });
+
             modelBuilder.Entity("GrowthDiary.Models.Post", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Comments")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Content")
@@ -36,6 +65,9 @@ namespace GrowthDiary.Migrations
 
                     b.Property<DateTime>("LastModifiedTime")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Like")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -65,6 +97,13 @@ namespace GrowthDiary.Migrations
                     b.HasIndex("PostId");
 
                     b.ToTable("PostImage");
+                });
+
+            modelBuilder.Entity("GrowthDiary.Models.Comment", b =>
+                {
+                    b.HasOne("GrowthDiary.Models.Post", null)
+                        .WithMany("CommentCollection")
+                        .HasForeignKey("PostId");
                 });
 
             modelBuilder.Entity("GrowthDiary.Models.Post", b =>

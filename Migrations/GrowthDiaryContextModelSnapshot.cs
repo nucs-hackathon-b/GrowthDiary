@@ -34,6 +34,8 @@ namespace GrowthDiary.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ForWhichId");
+
                     b.ToTable("Comment");
                 });
 
@@ -119,6 +121,15 @@ namespace GrowthDiary.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tag");
+                });
+
+            modelBuilder.Entity("GrowthDiary.Models.Comment", b =>
+                {
+                    b.HasOne("GrowthDiary.Models.Post", "Post")
+                        .WithMany("PostComments")
+                        .HasForeignKey("ForWhichId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GrowthDiary.Models.Post", b =>

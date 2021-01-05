@@ -15,6 +15,8 @@ namespace GrowthDiary.Models
         [Required]
         public int ForWhichId { get; set; }
 
+        public virtual Post Post { get; set; }
+
         public DateTime CreationTime { get; set; }
 
         [Required]

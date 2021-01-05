@@ -1,9 +1,7 @@
 ﻿@model IEnumerable<GrowthDiary.Models.Post>
 @using System.Web.Mvc
 
-@{
-    ViewData["Title"] = "Index";
-}
+@{ ViewData["Title"] = "Index"; }
 
 <h1>Index</h1>
 
@@ -33,6 +31,7 @@
 
 @section Scripts{
     <script src="~/js/index.js"></script>
+    <script src="~/js/likeButton.js"></script>
     @*@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script src="~/js/post.js"></script>*@
 }

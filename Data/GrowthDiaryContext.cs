@@ -32,6 +32,11 @@ namespace GrowthDiary.Data
                 b.HasOne(pt => pt.Post).WithMany(p => p.PostTags).HasForeignKey(pt => pt.PostId);
                 b.HasOne(pt => pt.Tag).WithMany(t => t.PostTags).HasForeignKey(pt => pt.TagId);
             });
+
+            builder.Entity<Post>(b =>
+            {
+                b.HasMany(b => b.PostComments).WithOne(c => c.Post).HasForeignKey(c => c.ForWhichId).OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }
