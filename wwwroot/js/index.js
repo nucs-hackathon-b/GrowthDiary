@@ -21,6 +21,7 @@
             success: function (data) {
                 $("#postTable").html(data);
                 addLikeButtons();
+                likeB();
                 //alert(data);
             },
             error: failedSearch
